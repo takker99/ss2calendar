@@ -19,7 +19,7 @@ module.exports = {
             'error',
             module.exports = {
                 printWidth: 80,
-                semi: false,
+                semi: true,
                 singleQuote: true,
                 trailingComma: 'es5',
                 tabWidth: 4,
