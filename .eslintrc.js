@@ -26,8 +26,9 @@ module.exports = {
             }
         ],
         "brace-style": [
-            "allman",
-            {"allowSingleLine": "true"},
+            'error',
+            'allman',
+            {allowSingleLine: true},
         ]
     }
 }
