@@ -40,12 +40,14 @@ function writeCalendar(date: Date): void
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(
         '2020-04-30'
     );
-
     if (sheet == null)
     {
         console.log("the target sheet doesn't exist.");
         return undefined;
     }
+
+    // 一旦クリア
+    sheet.clear();
 
     // Calendarから予定を取得
     const holydayCalendar = CalendarApp.getCalendarsByName('日本の祝日')[0];
