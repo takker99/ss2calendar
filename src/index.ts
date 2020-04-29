@@ -87,14 +87,23 @@ class Calendar
         return this.calendar.getEvents(period.start, period.end);
     }
 
-    public SetEvent(event: Event): void
+    public ModifyEvent(eventId: string, newEvent: Event): void
     {
-        this.calendar.createEvent(
+        const event = this.calendar.getEventById(eventId);
+        event.setTitle(newEvent.title);
+        event.setTime(newEvent.start, newEvent.end);
+        event.setDescription(newEvent.option.description);
+    }
+
+    public SetEvent(event: Event): string
+    {
+        const result = this.calendar.createEvent(
             event.title,
             event.start,
             event.end,
             event.option
         );
+        return result.getId();
     }
 
     private calendar: GoogleAppsScript.Calendar.Calendar;
@@ -147,7 +156,7 @@ function getDateFixed(
     minute: number
 ): Date
 {
-    return new Date(year, month - 1, day, hour - 13, minute);
+    return new Date(year, month - 1, day, hour, minute);
 }
 
 function writeCalendar(date: Date): void
@@ -184,17 +193,28 @@ function writeCalendar(date: Date): void
     }
 
     // sheetから記録を入手
+    // 1. task name
+    // 2. remark
+    // 3. 開始時刻のhh
+    // 4. 開始時刻のmm
+    // 5. 終了時刻のhh
+    // 6. 終了時刻のmm
+    // 7. event ID
     const records = sheet
-        .getRange(nowDate[4], nowDate[3], sheet.getLastRow() - 1, 6)
+        .getRange(nowDate[4], nowDate[3], sheet.getLastRow() - 1, 7)
         .getValues();
     const recordCalendar = new Calendar(
-        '4b1q49ogqlkrucdhhgap8k5g9c@group.calendar.google.com'
+        '2p339s4tkeoq57u649ul41e57o@group.calendar.google.com'
     );
 
     // 書き込み
-    for (const record of records)
+    for (let i = 0; i < records.length; i++)
     {
-        if (record[0] == '') break;
+        const record = records[i];
+
+        // task nameが空白のときは
+        // 読み飛ばす
+        if (record[0] == '') continue;
         console.log(`setting the event '${record[0]}'...`);
         console.log(`start time: ${record[2]}:${record[3]}`);
         const period = new TimeSpan(
@@ -218,7 +238,19 @@ function writeCalendar(date: Date): void
         console.log(`description: ${record[1]}`);
 
         const event: Event = new Event(record[0], period, record[1]);
-        recordCalendar.SetEvent(event);
+
+        // 既に登録済みの記録であれば、更新する
+        if (record[6] != '')
+        {
+            recordCalendar.ModifyEvent(record[6], event);
+            console.log(`done.`);
+            continue;
+        }
+
+        // event IDを新規登録する
+        const eventId: string = recordCalendar.SetEvent(event);
+        console.log(`event ID: ${eventId}`);
+        sheet.getRange(nowDate[4] + i, nowDate[3] + 6).setValue(eventId);
         console.log(`done.`);
     }
 }
