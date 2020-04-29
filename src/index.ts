@@ -154,9 +154,7 @@ function writeCalendar(date: Date): void
 {
     // SpreadSheetからdateの予定を
     // 取得
-    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(
-        'record'
-    );
+    const sheet = SpreadsheetApp.getActiveSheet();
     if (sheet == null)
     {
         console.log("the target sheet doesn't exist.");
