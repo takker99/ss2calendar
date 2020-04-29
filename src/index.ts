@@ -28,48 +28,49 @@ class TimeSpan
     constructor(begin: Date, end: Date);
     constructor(begin: number, end: number);
 
-    constructor(private begin: Date | number, value: Minutes | Date | number)
+    constructor(begin: Date | number, value: Minutes | Date | number)
     {
         if (begin instanceof Date)
         {
-            this.begin = new Date(begin.getTime());
+            this._start = new Date(begin.getTime());
         }
         else
         {
-            this.begin = new Date(begin);
+            this._start = new Date(begin);
         }
 
         if (value instanceof Date)
         {
-            this.end = new Date(value.getTime());
+            this._end = new Date(value.getTime());
         }
 
         if (value instanceof Minutes)
         {
-            this.end = add(this.begin, value);
+            this._end = add(this._start, value);
         }
         if (typeof value == 'number')
         {
-            this.end = new Date(value);
+            this._end = new Date(value);
         }
     }
 
     public AddMonth(months: number): void
     {
-        this.end.setMonth(this.end.getMonth() + months);
+        this._end.setMonth(this._end.getMonth() + months);
     }
 
     public get start(): Date
     {
-        return new Date(this.begin.getTime());
+        return new Date(this._start.getTime());
     }
 
     public get end(): Date
     {
-        return new Date(this.end.getTime());
+        return new Date(this._end.getTime());
     }
 
-    private end: Date;
+    private _start: Date;
+    private _end: Date;
 }
 
 type CalendarEvent = GoogleAppsScript.Calendar.CalendarEvent;
@@ -102,22 +103,22 @@ class Calendar
 class Event
 {
     constructor(
-        private title: string,
+        title: string,
         private period: TimeSpan,
         private description: string
     )
     {
-        this.title = title;
+        this._title = title;
         this.period = new TimeSpan(
             period.start.getTime(),
-            period.start.getTime()
+            period.end.getTime()
         );
         this.description = description;
     }
 
     public get title(): string
     {
-        return this.title;
+        return this._title;
     }
 
     public get start(): Date
@@ -134,6 +135,19 @@ class Event
     {
         return {description: this.description};
     }
+
+    private _title: string;
+}
+
+function getDateFixed(
+    year: number,
+    month: number,
+    day: number,
+    hour: number,
+    minute: number
+): Date
+{
+    return new Date(year, month - 1, day, hour - 13, minute);
 }
 
 function writeCalendar(date: Date): void
@@ -141,7 +155,7 @@ function writeCalendar(date: Date): void
     // SpreadSheetからdateの予定を
     // 取得
     const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(
-        '2020-04-30'
+        'record'
     );
     if (sheet == null)
     {
@@ -149,52 +163,64 @@ function writeCalendar(date: Date): void
         return undefined;
     }
 
-    // 一旦クリア
-    sheet.clear();
+    // 二次元配列転置用lambda式
+    // シートにあるデータから年・月・日を取得
+    const rowTemp: number[] = sheet.getRange(1, 2, 5, 1).getValues();
+    const nowDate: number[] = [
+        rowTemp[0][0],
+        rowTemp[1][0],
+        rowTemp[2][0],
+        rowTemp[3][0],
+        rowTemp[4][0],
+    ];
+    console.log(`date: ${nowDate[0]}/${nowDate[1]}/${nowDate[2]}`);
+    console.log(`データ開始行: ${nowDate[4]}`);
+    console.log(`データ開始列: ${nowDate[3]}`);
 
-    // Calendarから予定を取得
-    const holidayId = CalendarApp.getCalendarsByName('日本の祝日')[0].getId();
-    const holydayCalendar = new Calendar(holidayId);
-    const start: Date = new Date(Date.now());
-    const end: Date = new Date(start.getTime());
-    end.setMonth(end.getMonth() + 12); // 12ヶ月まで予定を取得する
-    const timeSpan = new TimeSpan(start, end);
-
-    const holidays: CalendarEvent[] = holydayCalendar.GetEvents(timeSpan);
-
-    // sheetに予定を書き込む
-    const temp: string[][] = sheet.getRange(1,1,sheet.getLastRow()-1,6).getValues();
-    for (let index = 2; index < holidays.length + 2; index++)
+    if (nowDate[3] == '')
     {
-        const holiday = holidays[index - 1];
-        temp[index] = [];
-        temp[index] = [
-            holiday.getTitle(), //イベントタイトル
-            //イベント開始時刻
-            holiday.getStartTime().getFullYear(),
-            holiday.getStartTime().getMonth(),
-        ];
-        sheet.getRange(index, 2).setValue(holiday.getStartTime().getFullYear());
-        sheet
-            .getRange(index, 3)
-            .setValue(holiday.getStartTime().getMonth() + 1);
-        sheet.getRange(index, 4).setValue(holiday.getStartTime().getDate());
-        sheet.getRange(index, 5).setValue(holiday.getStartTime().getHours());
-        sheet.getRange(index, 6).setValue(holiday.getStartTime().getMinutes());
-        //イベント終了時刻
-        sheet.getRange(index, 7).setValue(holiday.getEndTime().getFullYear());
-        sheet.getRange(index, 8).setValue(holiday.getEndTime().getMonth() + 1);
-        sheet.getRange(index, 9).setValue(holiday.getEndTime().getDate());
-        sheet.getRange(index, 10).setValue(holiday.getEndTime().getHours());
-        sheet.getRange(index, 11).setValue(holiday.getEndTime().getMinutes());
-        //所要時間
-        sheet
-            .getRange(index, 11)
-            .setValue(
-                `=DATE(G${index},H${index},I${index})-DATE(B${index},C${index},D${index})`
-            );
+        console.log(
+            '記録用のデータがありません。データの列の位置がずれている可能性があります'
+        );
+        return undefined;
     }
-    sheet.getRange(1, 1, holiday.length, 12);
 
-    // Calendarに書き込む
+    // sheetから記録を入手
+    const records = sheet
+        .getRange(nowDate[4], nowDate[3], sheet.getLastRow() - 1, 6)
+        .getValues();
+    const recordCalendar = new Calendar(
+        '4b1q49ogqlkrucdhhgap8k5g9c@group.calendar.google.com'
+    );
+
+    // 書き込み
+    for (const record of records)
+    {
+        if (record[0] == '') break;
+        console.log(`setting the event '${record[0]}'...`);
+        console.log(`start time: ${record[2]}:${record[3]}`);
+        const period = new TimeSpan(
+            getDateFixed(
+                nowDate[0],
+                nowDate[1],
+                nowDate[2],
+                record[2],
+                record[3]
+            ),
+            getDateFixed(
+                nowDate[0],
+                nowDate[1],
+                nowDate[2],
+                record[4],
+                record[5]
+            )
+        );
+        console.log(`start: ${period.start}`);
+        console.log(`end: ${period.end}`);
+        console.log(`description: ${record[1]}`);
+
+        const event: Event = new Event(record[0], period, record[1]);
+        recordCalendar.SetEvent(event);
+        console.log(`done.`);
+    }
 }
