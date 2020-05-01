@@ -90,9 +90,10 @@ class Calendar
     public ModifyEvent(eventId: string, newEvent: Event): void
     {
         const event = this.calendar.getEventById(eventId);
-        event.setTitle(newEvent.title);
-        event.setTime(newEvent.start, newEvent.end);
-        event.setDescription(newEvent.option.description);
+        if (event.getTitle() != newEvent.title) event.setTitle(newEvent.title);
+        if (event.getStartTime() != newEvent.start && event.getEndTime() != newEvent.end) event.setTime(newEvent.start, newEvent.end);
+        if (event.getDescription() != newEvent.option.description)
+            event.setDescription(newEvent.option.description);
     }
 
     public SetEvent(event: Event): string
