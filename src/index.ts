@@ -91,7 +91,11 @@ class Calendar
     {
         const event = this.calendar.getEventById(eventId);
         if (event.getTitle() != newEvent.title) event.setTitle(newEvent.title);
-        if (event.getStartTime() != newEvent.start && event.getEndTime() != newEvent.end) event.setTime(newEvent.start, newEvent.end);
+        if (
+            event.getStartTime() != newEvent.start &&
+            event.getEndTime() != newEvent.end
+        )
+            event.setTime(newEvent.start, newEvent.end);
         if (event.getDescription() != newEvent.option.description)
             event.setDescription(newEvent.option.description);
     }
@@ -160,11 +164,13 @@ function getDateFixed(
     return new Date(year, month - 1, day, hour, minute);
 }
 
-function writeCalendar(date: Date): void
+function _writeCalendar(
+    sheet: GoogleAppsScript.Spreadsheet.Sheet,
+    recordCalendar: GoogleAppsScript.Calendar
+): void
 {
     // SpreadSheetからdateの予定を
     // 取得
-    const sheet = SpreadsheetApp.getActiveSheet();
     if (sheet == null)
     {
         console.log("the target sheet doesn't exist.");
@@ -204,9 +210,6 @@ function writeCalendar(date: Date): void
     const records = sheet
         .getRange(nowDate[4], nowDate[3], sheet.getLastRow() - 1, 7)
         .getValues();
-    const recordCalendar = new Calendar(
-        '2p339s4tkeoq57u649ul41e57o@group.calendar.google.com'
-    );
 
     // 書き込み
     for (let i = 0; i < records.length; i++)
@@ -254,4 +257,12 @@ function writeCalendar(date: Date): void
         sheet.getRange(nowDate[4] + i, nowDate[3] + 6).setValue(eventId);
         console.log(`done.`);
     }
+}
+
+function writeCalendar(): void
+{
+    _writeCalendar(
+        SpreadsheetApp.getActiveSheet(),
+        new Calendar('2p339s4tkeoq57u649ul41e57o@group.calendar.google.com')
+    );
 }
