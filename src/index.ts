@@ -260,19 +260,21 @@ function _writeSchedule(
 
     // 二次元配列転置用lambda式
     // シートにあるデータから年・月・日を取得
+    // TODO:年・月・日を取得しないようにする。
+    // 日付の情報は全て各tableに記述することにする。
     const rowTemp: number[] = sheet.getRange(1, 2, 5, 1).getValues();
-    const nowDate: number[] = [
+    const schemes: number[] = [
         rowTemp[0][0],
         rowTemp[1][0],
         rowTemp[2][0],
         rowTemp[3][0],
         rowTemp[4][0],
     ];
-    console.log(`date: ${nowDate[0]}/${nowDate[1]}/${nowDate[2]}`);
-    console.log(`データ開始行: ${nowDate[4]}`);
-    console.log(`データ開始列: ${nowDate[3]}`);
+    console.log(`date: ${schemes[0]}/${schemes[1]}/${schemes[2]}`);
+    console.log(`データ開始行: ${schemes[4]}`);
+    console.log(`データ開始列: ${schemes[3]}`);
 
-    if (nowDate[3] == '')
+    if (schemes[3] == '')
     {
         console.log(
             '記録用のデータがありません。データの列の位置がずれている可能性があります'
@@ -289,7 +291,7 @@ function _writeSchedule(
     // 6. 終了時刻のmm
     // 7. event ID
     const records = sheet
-        .getRange(nowDate[4], nowDate[3], sheet.getLastRow() - 1, 11)
+        .getRange(schemes[4], schemes[3], sheet.getLastRow() - 1, 11)
         .getValues();
 
     // 書き込み
@@ -304,14 +306,14 @@ function _writeSchedule(
         console.log(`start time: ${record[2]}/${record[3]} ${record[4]}:${record[5]}`);
         const period = new TimeSpan(
             getDateFixed(
-                nowDate[0],
+                schemes[0],
                 record[2],
                 record[3],
                 record[4],
                 record[5]
             ),
             getDateFixed(
-                nowDate[0],
+                schemes[0],
                 record[6],
                 record[7],
                 record[8],
@@ -335,7 +337,7 @@ function _writeSchedule(
         // event IDを新規登録する
         const eventId: string = recordCalendar.SetEvent(event);
         console.log(`event ID: ${eventId}`);
-        sheet.getRange(nowDate[4] + i, nowDate[3] + 10).setValue(eventId);
+        sheet.getRange(schemes[4] + i, schemes[3] + 10).setValue(eventId);
         console.log(`done.`);
     }
 }
