@@ -169,13 +169,6 @@ function _writeCalendar(
     recordCalendar: GoogleAppsScript.Calendar
 ): void
 {
-    // SpreadSheetからdateの予定を
-    // 取得
-    if (sheet == null)
-    {
-        console.log("the target sheet doesn't exist.");
-        return undefined;
-    }
 
     // 二次元配列転置用lambda式
     // シートにあるデータから年・月・日を取得
@@ -259,10 +252,120 @@ function _writeCalendar(
     }
 }
 
+function _writeSchedule(
+    sheet: GoogleAppsScript.Spreadsheet.Sheet,
+    recordCalendar: GoogleAppsScript.Calendar
+): void
+{
+
+    // 二次元配列転置用lambda式
+    // シートにあるデータから年・月・日を取得
+    const rowTemp: number[] = sheet.getRange(1, 2, 5, 1).getValues();
+    const nowDate: number[] = [
+        rowTemp[0][0],
+        rowTemp[1][0],
+        rowTemp[2][0],
+        rowTemp[3][0],
+        rowTemp[4][0],
+    ];
+    console.log(`date: ${nowDate[0]}/${nowDate[1]}/${nowDate[2]}`);
+    console.log(`データ開始行: ${nowDate[4]}`);
+    console.log(`データ開始列: ${nowDate[3]}`);
+
+    if (nowDate[3] == '')
+    {
+        console.log(
+            '記録用のデータがありません。データの列の位置がずれている可能性があります'
+        );
+        return undefined;
+    }
+
+    // sheetから記録を入手
+    // 1. task name
+    // 2. remark
+    // 3. 開始時刻のhh
+    // 4. 開始時刻のmm
+    // 5. 終了時刻のhh
+    // 6. 終了時刻のmm
+    // 7. event ID
+    const records = sheet
+        .getRange(nowDate[4], nowDate[3], sheet.getLastRow() - 1, 11)
+        .getValues();
+
+    // 書き込み
+    for (let i = 0; i < records.length; i++)
+    {
+        const record = records[i];
+
+        // task nameが空白のときは
+        // 読み飛ばす
+        if (record[0] == '') continue;
+        console.log(`setting the event '${record[0]}'...`);
+        console.log(`start time: ${record[2]}/${record[3]} ${record[4]}:${record[5]}`);
+        const period = new TimeSpan(
+            getDateFixed(
+                nowDate[0],
+                record[2],
+                record[3],
+                record[4],
+                record[5]
+            ),
+            getDateFixed(
+                nowDate[0],
+                record[6],
+                record[7],
+                record[8],
+                record[9]
+            )
+        );
+        console.log(`start: ${period.start}`);
+        console.log(`end: ${period.end}`);
+        console.log(`description: ${record[1]}`);
+
+        const event: Event = new Event(record[0], period, record[1]);
+
+        // 既に登録済みの記録であれば、更新する
+        if (record[10] != '')
+        {
+            recordCalendar.ModifyEvent(record[10], event);
+            console.log(`done.`);
+            continue;
+        }
+
+        // event IDを新規登録する
+        const eventId: string = recordCalendar.SetEvent(event);
+        console.log(`event ID: ${eventId}`);
+        sheet.getRange(nowDate[4] + i, nowDate[3] + 10).setValue(eventId);
+        console.log(`done.`);
+    }
+}
+
 function writeCalendar(): void
 {
-    _writeCalendar(
-        SpreadsheetApp.getActiveSheet(),
+    const sheet = SpreadsheetApp.getActiveSheet();
+    // SpreadSheetからdateの予定を
+    // 取得
+    if (sheet == null)
+    {
+        console.log("the target sheet doesn't exist.");
+        return undefined;
+    }
+    _writeCalendar(sheet,
         new Calendar('2p339s4tkeoq57u649ul41e57o@group.calendar.google.com')
+    );
+}
+
+function writeSchedule(): void
+{
+    const sheet = SpreadsheetApp.getActiveSheet();
+    // SpreadSheetからdateの予定を
+    // 取得
+    if (sheet == null)
+    {
+        console.log("the target sheet doesn't exist.");
+        return undefined;
+    }
+    _writeSchedule(sheet,
+        new Calendar('kua4bd6695fov7jrl9cmfu3o7o@group.calendar.google.com')
     );
 }
