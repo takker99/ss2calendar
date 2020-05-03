@@ -169,22 +169,19 @@ function _writeCalendar(
     recordCalendar: GoogleAppsScript.Calendar
 ): void
 {
-
     // 二次元配列転置用lambda式
-    // シートにあるデータから年・月・日を取得
-    const rowTemp: number[] = sheet.getRange(1, 2, 5, 1).getValues();
-    const nowDate: number[] = [
-        rowTemp[0][0],
-        rowTemp[1][0],
-        rowTemp[2][0],
-        rowTemp[3][0],
-        rowTemp[4][0],
-    ];
-    console.log(`date: ${nowDate[0]}/${nowDate[1]}/${nowDate[2]}`);
-    console.log(`データ開始行: ${nowDate[4]}`);
-    console.log(`データ開始列: ${nowDate[3]}`);
+    // シートにあるデータから
+    // - calendarと同期するevent dataの開始cellの位置
+    // を取得
+    const rowTemp: number[] = sheet.getRange(1, 2, 2, 1).getValues();
+    const schemes: {row: number; column: number} = {
+        row: rowTemp[1][0],
+        column: rowTemp[0][0],
+    };
+    console.log(`データ開始行: ${schemes.row}`);
+    console.log(`データ開始列: ${schemes.column}`);
 
-    if (nowDate[3] == '')
+    if (isNaN(schemes.row))
     {
         console.log(
             '記録用のデータがありません。データの列の位置がずれている可能性があります'
@@ -192,17 +189,54 @@ function _writeCalendar(
         return undefined;
     }
 
+    interface Record
+    {
+        event: Event;
+        id: string;
+    }
     // sheetから記録を入手
-    // 1. task name
-    // 2. remark
-    // 3. 開始時刻のhh
-    // 4. 開始時刻のmm
-    // 5. 終了時刻のhh
-    // 6. 終了時刻のmm
-    // 7. event ID
-    const records = sheet
-        .getRange(nowDate[4], nowDate[3], sheet.getLastRow() - 1, 7)
-        .getValues();
+    //  1. task name
+    //  2. remark
+    //  3. 開始時刻のyyyy
+    //  4. 開始時刻のMM
+    //  5. 開始時刻のdd
+    //  6. 開始時刻のhh
+    //  7. 開始時刻のmm
+    //  8. 終了時刻のyyyy
+    //  9. 終了時刻のMM
+    // 10. 終了時刻のdd
+    // 11. 終了時刻のhh
+    // 12. 終了時刻のmm
+    // 13. event ID
+    const records: Record[] = sheet
+        .getRange(schemes.row, schemes.column, sheet.getLastRow() - 1, 13)
+        .getValues()
+        .map((record) =>
+        {
+            return {
+                event: new Event(
+                    record[0],
+                    new TimeSpan(
+                        getDateFixed(
+                            record[2],
+                            record[3],
+                            record[4],
+                            record[5],
+                            record[6]
+                        ),
+                        getDateFixed(
+                            record[7],
+                            record[8],
+                            record[9],
+                            record[10],
+                            record[11]
+                        )
+                    ),
+                    record[1]
+                ),
+                id: record[12],
+            };
+        });
 
     // 書き込み
     for (let i = 0; i < records.length; i++)
@@ -211,133 +245,26 @@ function _writeCalendar(
 
         // task nameが空白のときは
         // 読み飛ばす
-        if (record[0] == '') continue;
-        console.log(`setting the event '${record[0]}'...`);
-        console.log(`start time: ${record[2]}:${record[3]}`);
-        const period = new TimeSpan(
-            getDateFixed(
-                nowDate[0],
-                nowDate[1],
-                nowDate[2],
-                record[2],
-                record[3]
-            ),
-            getDateFixed(
-                nowDate[0],
-                nowDate[1],
-                nowDate[2],
-                record[4],
-                record[5]
-            )
-        );
-        console.log(`start: ${period.start}`);
-        console.log(`end: ${period.end}`);
-        console.log(`description: ${record[1]}`);
-
-        const event: Event = new Event(record[0], period, record[1]);
+        if (record.event.title == '') continue;
+        console.log(`setting the event '${record.event.title}'...`);
+        console.log(`start: ${record.event.start}`);
+        console.log(`end: ${record.event.end}`);
+        console.log(`description: ${record.event.description}`);
 
         // 既に登録済みの記録であれば、更新する
-        if (record[6] != '')
+        if (record.id != '')
         {
-            recordCalendar.ModifyEvent(record[6], event);
+            recordCalendar.ModifyEvent(record.id, record.event);
             console.log(`done.`);
             continue;
         }
 
         // event IDを新規登録する
-        const eventId: string = recordCalendar.SetEvent(event);
+        const eventId: string = recordCalendar.SetEvent(record.event);
         console.log(`event ID: ${eventId}`);
-        sheet.getRange(nowDate[4] + i, nowDate[3] + 6).setValue(eventId);
-        console.log(`done.`);
-    }
-}
-
-function _writeSchedule(
-    sheet: GoogleAppsScript.Spreadsheet.Sheet,
-    recordCalendar: GoogleAppsScript.Calendar
-): void
-{
-
-    // 二次元配列転置用lambda式
-    // シートにあるデータから年・月・日を取得
-    // TODO:年・月・日を取得しないようにする。
-    // 日付の情報は全て各tableに記述することにする。
-    const rowTemp: number[] = sheet.getRange(1, 2, 5, 1).getValues();
-    const schemes: number[] = [
-        rowTemp[0][0],
-        rowTemp[1][0],
-        rowTemp[2][0],
-        rowTemp[3][0],
-        rowTemp[4][0],
-    ];
-    console.log(`date: ${schemes[0]}/${schemes[1]}/${schemes[2]}`);
-    console.log(`データ開始行: ${schemes[4]}`);
-    console.log(`データ開始列: ${schemes[3]}`);
-
-    if (schemes[3] == '')
-    {
-        console.log(
-            '記録用のデータがありません。データの列の位置がずれている可能性があります'
-        );
-        return undefined;
-    }
-
-    // sheetから記録を入手
-    // 1. task name
-    // 2. remark
-    // 3. 開始時刻のhh
-    // 4. 開始時刻のmm
-    // 5. 終了時刻のhh
-    // 6. 終了時刻のmm
-    // 7. event ID
-    const records = sheet
-        .getRange(schemes[4], schemes[3], sheet.getLastRow() - 1, 11)
-        .getValues();
-
-    // 書き込み
-    for (let i = 0; i < records.length; i++)
-    {
-        const record = records[i];
-
-        // task nameが空白のときは
-        // 読み飛ばす
-        if (record[0] == '') continue;
-        console.log(`setting the event '${record[0]}'...`);
-        console.log(`start time: ${record[2]}/${record[3]} ${record[4]}:${record[5]}`);
-        const period = new TimeSpan(
-            getDateFixed(
-                schemes[0],
-                record[2],
-                record[3],
-                record[4],
-                record[5]
-            ),
-            getDateFixed(
-                schemes[0],
-                record[6],
-                record[7],
-                record[8],
-                record[9]
-            )
-        );
-        console.log(`start: ${period.start}`);
-        console.log(`end: ${period.end}`);
-        console.log(`description: ${record[1]}`);
-
-        const event: Event = new Event(record[0], period, record[1]);
-
-        // 既に登録済みの記録であれば、更新する
-        if (record[10] != '')
-        {
-            recordCalendar.ModifyEvent(record[10], event);
-            console.log(`done.`);
-            continue;
-        }
-
-        // event IDを新規登録する
-        const eventId: string = recordCalendar.SetEvent(event);
-        console.log(`event ID: ${eventId}`);
-        sheet.getRange(schemes[4] + i, schemes[3] + 10).setValue(eventId);
+        sheet
+            .getRange(schemes.row + i, schemes.column + 13 - 1)
+            .setValue(eventId);
         console.log(`done.`);
     }
 }
@@ -352,7 +279,8 @@ function writeCalendar(): void
         console.log("the target sheet doesn't exist.");
         return undefined;
     }
-    _writeCalendar(sheet,
+    _writeCalendar(
+        sheet,
         new Calendar('2p339s4tkeoq57u649ul41e57o@group.calendar.google.com')
     );
 }
@@ -367,7 +295,8 @@ function writeSchedule(): void
         console.log("the target sheet doesn't exist.");
         return undefined;
     }
-    _writeSchedule(sheet,
+    _writeCalendar(
+        sheet,
         new Calendar('kua4bd6695fov7jrl9cmfu3o7o@group.calendar.google.com')
     );
 }
