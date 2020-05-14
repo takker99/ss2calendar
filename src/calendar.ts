@@ -22,32 +22,21 @@ export class TimeSpan {
     constructor(begin: Date, length: Minutes);
     constructor(begin: Date, end: Date);
     constructor(begin: number, end: number);
-    constructor(timeSpan: TimeSpan);
 
-    constructor(
-        begin: Date | TimeSpan | number,
-        value?: Minutes | Date | number
-    ) {
+    constructor(begin: Date | number, value: Minutes | Date | number) {
         if (begin instanceof Date) {
             this._start = new Date(begin.getTime());
-        }
-        if (begin instanceof TimeSpan) {
-            this._start = new Date(begin.start.getTime());
-            this._end = new Date(begin.end.getTime());
         } else {
             this._start = new Date(begin);
-
-            if (value instanceof Date) {
-                this._end = new Date(value.getTime());
-            }
-            if (value instanceof Minutes) {
-                this._end = add(this._start, value);
-            }
-            if (typeof value == 'number') {
-                this._end = new Date(value);
-            } else {
-                this._end = new Date(this.start.getTime());
-            }
+        }
+        if (value instanceof Date) {
+            this._end = new Date(value.getTime());
+        }
+        if (value instanceof Minutes) {
+            this._end = add(this._start, value);
+        }
+        if (typeof value == 'number') {
+            this._end = new Date(value);
         }
     }
 
@@ -114,7 +103,7 @@ export class Event {
         description: string
     ) {
         this._title = title;
-        this.period = new TimeSpan(period);
+        this.period = new TimeSpan(period.start, period.end);
         this._description = description;
     }
 

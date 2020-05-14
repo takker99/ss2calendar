@@ -1,8 +1,8 @@
-import { Event, TimeSpan, getDateFixed, Calendar } from './calendar';
+import * as ss from './calendar';
 
 function _writeCalendar(
     sheet: GoogleAppsScript.Spreadsheet.Sheet,
-    recordCalendar: Calendar
+    recordCalendar: ss.Calendar
 ): void {
     // 二次元配列転置用lambda式
     // シートにあるデータから
@@ -24,7 +24,7 @@ function _writeCalendar(
     }
 
     interface Record {
-        event: Event;
+        event: ss.Event;
         id: string;
     }
     // sheetから記録を入手
@@ -46,17 +46,17 @@ function _writeCalendar(
         .getValues()
         .map((record) => {
             return {
-                event: new Event(
+                event: new ss.Event(
                     record[0],
-                    new TimeSpan(
-                        getDateFixed(
+                    new ss.TimeSpan(
+                        ss.getDateFixed(
                             record[2],
                             record[3],
                             record[4],
                             record[5],
                             record[6]
                         ),
-                        getDateFixed(
+                        ss.getDateFixed(
                             record[7],
                             record[8],
                             record[9],
@@ -90,7 +90,7 @@ function _writeCalendar(
         }
 
         // event IDを新規登録する
-        const eventId: string = recordCalendar.SetEvent(record.event);
+        const eventId: string = recordCalendar.Add(record.event);
         console.log(`event ID: ${eventId}`);
         sheet
             .getRange(schemes.row + i, schemes.column + 13 - 1)
@@ -109,7 +109,7 @@ function writeCalendar(): void {
     }
     _writeCalendar(
         sheet,
-        new Calendar('2p339s4tkeoq57u649ul41e57o@group.calendar.google.com')
+        new ss.Calendar('2p339s4tkeoq57u649ul41e57o@group.calendar.google.com')
     );
 }
 
@@ -123,6 +123,6 @@ function writeSchedule(): void {
     }
     _writeCalendar(
         sheet,
-        new Calendar('kua4bd6695fov7jrl9cmfu3o7o@group.calendar.google.com')
+        new ss.Calendar('kua4bd6695fov7jrl9cmfu3o7o@group.calendar.google.com')
     );
 }
