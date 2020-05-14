@@ -1,0 +1,30 @@
+{
+    "extends": [
+        "eslint:recommended",
+        "plugin:@typescript-eslint/recommended",
+        "plugin:@typescript-eslint/eslint-recommended",
+
+        "plugin:prettier/recommended",
+        "prettier/@typescript-eslint"
+    ],
+    "plugins": [
+        "@typescript-eslint"
+    ],
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+        "ecmaVersion":11,
+        "sourceType": "module"
+    },
+    "rules": {
+        "prettier/prettier": [
+            "error",
+            {
+                "printWidth": 80,
+                "semi": true,
+                "singleQuote": true,
+                "trailingComma": "es5",
+                "tabWidth": 4
+            }
+        ]
+    }
+}
