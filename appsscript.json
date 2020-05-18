@@ -5,9 +5,9 @@
   "exceptionLogging": "STACKDRIVER",
   "runtimeVersion": "V8",
   "sheets": {
-    "macros": [{
-      "menuName": "writeCalendar",
-      "functionName": "writeCalendar"
-    }]
+      "macros": [{
+          "menuName": "writeCalendar",
+          "functionName": "writeCalendar"
+      }]
   }
 }
