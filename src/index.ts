@@ -101,6 +101,10 @@ function _writeCalendar(
 
 function writeCalendar(): void {
     const sheet = SpreadsheetApp.getActiveSheet();
+    if (sheet.getRange(3, 2, 1, 1).getValue() == 0) {
+        // calendar用のsheetでなければ何もしない
+        return undefined;
+    }
     // SpreadSheetからdateの予定を
     // 取得
     if (sheet == null) {
