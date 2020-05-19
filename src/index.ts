@@ -30,20 +30,28 @@ function _writeCalendar(
     }
     // sheetから記録を入手
     //  1. task name
-    //  2. remark
-    //  3. 開始時刻のyyyy
-    //  4. 開始時刻のMM
-    //  5. 開始時刻のdd
-    //  6. 開始時刻のhh
-    //  7. 開始時刻のmm
-    //  8. 終了時刻のyyyy
-    //  9. 終了時刻のMM
-    // 10. 終了時刻のdd
-    // 11. 終了時刻のhh
-    // 12. 終了時刻のmm
-    // 13. event ID
+    //  2. 予定作業内容
+    //  3. 実際の作業内容
+    //  4. 所感
+    //  5. 開始時刻のyyyy
+    //  6. 開始時刻のMM
+    //  7. 開始時刻のdd
+    //  8. 開始時刻のhh
+    //  9. 開始時刻のmm
+    //  10. 終了時刻のyyyy
+    //  11. 終了時刻のMM
+    // 12. 終了時刻のdd
+    // 13. 終了時刻のhh
+    // 14. 終了時刻のmm
+    // 15. event ID
+    const timespanColumn = 4; // 時刻データ列の先頭
     const records: Record[] = sheet
-        .getRange(schemes.row, schemes.column, sheet.getLastRow() - 1, 13)
+        .getRange(
+            schemes.row,
+            schemes.column,
+            sheet.getLastRow() - 1,
+            1 + 3 + 5 + 5 + 1
+        )
         .getValues()
         .map((record) => {
             return {
@@ -51,23 +59,25 @@ function _writeCalendar(
                     record[0],
                     new ss.TimeSpan(
                         ss.getDateFixed(
-                            record[2],
-                            record[3],
-                            record[4],
-                            record[5],
-                            record[6]
+                            record[timespanColumn + 0],
+                            record[timespanColumn + 1],
+                            record[timespanColumn + 2],
+                            record[timespanColumn + 3],
+                            record[timespanColumn + 4]
                         ),
                         ss.getDateFixed(
-                            record[7],
-                            record[8],
-                            record[9],
-                            record[10],
-                            record[11]
+                            record[timespanColumn + 5],
+                            record[timespanColumn + 6],
+                            record[timespanColumn + 7],
+                            record[timespanColumn + 8],
+                            record[timespanColumn + 9]
                         )
                     ),
-                    record[1]
+                    record[1] +
+                        (record[2] != '' ? '\n---\n' + record[2] : '') +
+                        (record[3] != '' ? '\n---\n' + record[3] : '')
                 ),
-                id: record[12],
+                id: record[timespanColumn + 5 + 5],
             };
         });
 
@@ -94,7 +104,7 @@ function _writeCalendar(
         const eventId: string = recordCalendar.Add(record.event);
         console.log(`event ID: ${eventId}`);
         sheet
-            .getRange(schemes.row + i, schemes.column + 13 - 1)
+            .getRange(schemes.row + i, schemes.column + timespanColumn + 10)
             .setValue(eventId);
         console.log(`done.`);
     }
