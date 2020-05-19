@@ -1,4 +1,5 @@
 import * as ss from './calendar';
+import * as variables from './variables';
 
 function _writeCalendar(
     sheet: GoogleAppsScript.Spreadsheet.Sheet,
@@ -111,10 +112,7 @@ function writeCalendar(): void {
         console.log("the target sheet doesn't exist.");
         return undefined;
     }
-    _writeCalendar(
-        sheet,
-        new ss.Calendar('2p339s4tkeoq57u649ul41e57o@group.calendar.google.com')
-    );
+    _writeCalendar(sheet, new ss.Calendar(variables.eventCarendarId));
 }
 
 function writeSchedule(): void {
