@@ -1,5 +1,5 @@
-import * as moment from 'moment';
-const Moment = { moment: moment }; // GAS対策 cf. https://qiita.com/awa2/items/d24df6abd5fd5e4ca3d9
+/* import * as moment from 'moment'; */
+/* const Moment = { moment: moment }; // GAS対策 cf. https://qiita.com/awa2/items/d24df6abd5fd5e4ca3d9 */
 
 export class Minutes {
     constructor(private minutes: number) {
