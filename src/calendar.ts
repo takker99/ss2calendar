@@ -37,8 +37,7 @@ export class TimeSpan {
         }
         if (value instanceof Minutes) {
             this._end = add(this._start, value);
-        }
-        if (typeof value == 'number') {
+        } else {
             this._end = new Date(value);
         }
     }
