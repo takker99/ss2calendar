@@ -31,9 +31,6 @@ function _writeCalendar(sheet: GoogleAppsScript.Spreadsheet.Sheet): void {
         Title = 0,
         Expectation,
         ActualAction,
-        Reason,
-        Measure,
-        FirstStep,
         EmotionTag,
         Remarks,
         StartYear,
@@ -91,21 +88,6 @@ function _writeCalendar(sheet: GoogleAppsScript.Spreadsheet.Sheet): void {
                         (record[RecordDataIndex.EmotionTag] != ''
                             ? '## 作業時の心情\n\n' +
                               record[RecordDataIndex.EmotionTag] +
-                              '\n\n'
-                            : '') +
-                        (record[RecordDataIndex.Reason] != ''
-                            ? '# 何故そうなったか\n\n' +
-                              record[RecordDataIndex.Reason] +
-                              '\n\n'
-                            : '') +
-                        (record[RecordDataIndex.Measure] != ''
-                            ? '# 次回はどうする\n\n' +
-                              record[RecordDataIndex.Measure] +
-                              '\n\n'
-                            : '') +
-                        (record[RecordDataIndex.FirstStep] != ''
-                            ? '# まず何をするか\n\n' +
-                              record[RecordDataIndex.FirstStep] +
                               '\n\n'
                             : '') +
                         (record[RecordDataIndex.Remarks] != ''
