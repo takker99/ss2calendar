@@ -1,10 +1,6 @@
-import * as ss from './calendar';
-import * as variables from './variables';
+import { Calendar, Event, getDateFixed, TimeSpan } from './calendar';
 
-function _writeCalendar(
-    sheet: GoogleAppsScript.Spreadsheet.Sheet,
-    recordCalendar: ss.Calendar
-): void {
+function _writeCalendar(sheet: GoogleAppsScript.Spreadsheet.Sheet): void {
     // 二次元配列転置用lambda式
     // シートにあるデータから
     // - calendarと同期するevent dataの開始cellの位置
@@ -25,59 +21,99 @@ function _writeCalendar(
     }
 
     interface Record {
-        event: ss.Event;
+        event: Event;
         id: string;
+        calendarId: string;
     }
     // sheetから記録を入手
-    //  1. task name
-    //  2. 予定作業内容
-    //  3. 実際の作業内容
-    //  4. 所感
-    //  5. 開始時刻のyyyy
-    //  6. 開始時刻のMM
-    //  7. 開始時刻のdd
-    //  8. 開始時刻のhh
-    //  9. 開始時刻のmm
-    //  10. 終了時刻のyyyy
-    //  11. 終了時刻のMM
-    // 12. 終了時刻のdd
-    // 13. 終了時刻のhh
-    // 14. 終了時刻のmm
-    // 15. event ID
-    const timespanColumn = 4; // 時刻データ列の先頭
+    // 一番最後の要素の値をenumの要素数計算に使用する
+    const enum RecordDataIndex {
+        Title = 0,
+        Expectation,
+        ActualAction,
+        Reason,
+        Measure,
+        FirstStep,
+        EmotionTag,
+        Remarks,
+        StartYear,
+        StartMonth,
+        StartDate,
+        StartHour,
+        StartMinute,
+        EndYear,
+        EndMonth,
+        EndDate,
+        EndHour,
+        EndMinute,
+        EventId,
+        CalendarId,
+    }
+
     const records: Record[] = sheet
         .getRange(
             schemes.row,
             schemes.column,
             sheet.getLastRow() - 1,
-            1 + 3 + 5 + 5 + 1
+            RecordDataIndex.CalendarId + 1 // 読み込むrecordの総数
         )
         .getValues()
         .map((record) => {
             return {
-                event: new ss.Event(
-                    record[0],
-                    new ss.TimeSpan(
-                        ss.getDateFixed(
-                            record[timespanColumn + 0],
-                            record[timespanColumn + 1],
-                            record[timespanColumn + 2],
-                            record[timespanColumn + 3],
-                            record[timespanColumn + 4]
+                event: new Event(
+                    record[RecordDataIndex.Title],
+                    new TimeSpan(
+                        getDateFixed(
+                            record[RecordDataIndex.StartYear],
+                            record[RecordDataIndex.StartMonth],
+                            record[RecordDataIndex.StartDate],
+                            record[RecordDataIndex.StartHour],
+                            record[RecordDataIndex.StartMinute]
                         ),
-                        ss.getDateFixed(
-                            record[timespanColumn + 5],
-                            record[timespanColumn + 6],
-                            record[timespanColumn + 7],
-                            record[timespanColumn + 8],
-                            record[timespanColumn + 9]
+                        getDateFixed(
+                            record[RecordDataIndex.EndYear],
+                            record[RecordDataIndex.EndMonth],
+                            record[RecordDataIndex.EndDate],
+                            record[RecordDataIndex.EndHour],
+                            record[RecordDataIndex.EndMinute]
                         )
                     ),
-                    record[1] +
-                        (record[2] != '' ? '\n---\n' + record[2] : '') +
-                        (record[3] != '' ? '\n---\n' + record[3] : '')
+                    (record[RecordDataIndex.Expectation] != ''
+                        ? '# 作業予定内容\n\n' +
+                          record[RecordDataIndex.Expectation] +
+                          '\n\n'
+                        : '') +
+                        (record[RecordDataIndex.ActualAction] != ''
+                            ? '# 実際の作業結果\n\n' +
+                              record[RecordDataIndex.ActualAction] +
+                              '\n\n'
+                            : '') +
+                        (record[RecordDataIndex.EmotionTag] != ''
+                            ? '## 作業時の心情\n\n' +
+                              record[RecordDataIndex.EmotionTag] +
+                              '\n\n'
+                            : '') +
+                        (record[RecordDataIndex.Reason] != ''
+                            ? '# 何故そうなったか\n\n' +
+                              record[RecordDataIndex.Reason] +
+                              '\n\n'
+                            : '') +
+                        (record[RecordDataIndex.Measure] != ''
+                            ? '# 次回はどうする\n\n' +
+                              record[RecordDataIndex.Measure] +
+                              '\n\n'
+                            : '') +
+                        (record[RecordDataIndex.FirstStep] != ''
+                            ? '# まず何をするか\n\n' +
+                              record[RecordDataIndex.FirstStep] +
+                              '\n\n'
+                            : '') +
+                        (record[RecordDataIndex.Remarks] != ''
+                            ? '# 備考\n\n' + record[RecordDataIndex.Remarks]
+                            : '')
                 ),
-                id: record[timespanColumn + 5 + 5],
+                id: record[RecordDataIndex.EventId],
+                calendarId: record[RecordDataIndex.CalendarId],
             };
         });
 
@@ -93,6 +129,7 @@ function _writeCalendar(
         console.log(`end: ${record.event.end}`);
         console.log(`description: ${record.event.description}`);
 
+        const recordCalendar: Calendar = new Calendar(record.calendarId);
         // 既に登録済みの記録であれば、更新する
         if (record.id != '') {
             recordCalendar.ModifyEvent(record.id, record.event);
@@ -104,7 +141,7 @@ function _writeCalendar(
         const eventId: string = recordCalendar.Add(record.event);
         console.log(`event ID: ${eventId}`);
         sheet
-            .getRange(schemes.row + i, schemes.column + timespanColumn + 10)
+            .getRange(schemes.row + i, schemes.column + RecordDataIndex.EventId)
             .setValue(eventId);
         console.log(`done.`);
     }
@@ -122,7 +159,7 @@ function writeCalendar(): void {
         console.log("the target sheet doesn't exist.");
         return undefined;
     }
-    _writeCalendar(sheet, new ss.Calendar(variables.eventCarendarId));
+    _writeCalendar(sheet);
 }
 
 function writeSchedule(): void {
@@ -133,8 +170,5 @@ function writeSchedule(): void {
         console.log("the target sheet doesn't exist.");
         return undefined;
     }
-    _writeCalendar(
-        sheet,
-        new ss.Calendar('kua4bd6695fov7jrl9cmfu3o7o@group.calendar.google.com')
-    );
+    _writeCalendar(sheet);
 }
