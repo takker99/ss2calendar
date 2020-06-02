@@ -117,7 +117,7 @@ function _writeCalendar(sheet: GoogleAppsScript.Spreadsheet.Sheet): void {
         const recordCalendar: Calendar = new Calendar(record.calendarId);
         // 既に登録済みの記録であれば、更新する
         if (record.eventId != '') {
-            recordCalendar.ModifyEvent(record.eventId, record.event);
+            recordCalendar.Modify(record.eventId, record.event);
             console.log(`done.`);
             continue;
         }

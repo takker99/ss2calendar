@@ -65,7 +65,7 @@ export class Calendar {
         this.calendar = CalendarApp.getCalendarById(calendarId);
     }
 
-    public ModifyEvent(eventId: string, newEvent: Event): void {
+    public Modify(eventId: string, newEvent: Event): void {
         const event = this.calendar.getEventById(eventId);
         if (event.getTitle() != newEvent.title) event.setTitle(newEvent.title);
         if (
