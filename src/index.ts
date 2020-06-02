@@ -1,17 +1,46 @@
-import { Calendar, Event, getDateFixed, TimeSpan } from './calendar';
+import {Calendar, Event, getDateFixed, TimeSpan} from './calendar';
+
+function getSettingData(sheet: GoogleAppsScript.Spreadsheet.Sheet): {row: number; column: number} {
+    const temp = sheet.getRange(1, 2, 2, 1).getValues() as number[][];
+    // debug用
+    console.log(`データ開始行: ${temp[1][0]}`);
+    console.log(`データ開始列: ${temp[0][0]}`);
+    return {row: temp[1][0], column: temp[0][0]};
+}
+
+interface Record {
+    event: Event;
+    eventId: string;
+    calendarId: string;
+}
+
+// 一番最後の要素の値をenumの要素数計算に使用する
+const enum RecordDataIndex {
+    Title = 0,
+    Expectation,
+    ActualAction,
+    EmotionTag,
+    Remarks,
+    StartYear,
+    StartMonth,
+    StartDate,
+    StartHour,
+    StartMinute,
+    EndYear,
+    EndMonth,
+    EndDate,
+    EndHour,
+    EndMinute,
+    EventId,
+    CalendarId,
+}
 
 function _writeCalendar(sheet: GoogleAppsScript.Spreadsheet.Sheet): void {
     // 二次元配列転置用lambda式
     // シートにあるデータから
     // - calendarと同期するevent dataの開始cellの位置
     // を取得
-    const rowTemp = sheet.getRange(1, 2, 2, 1).getValues() as number[][];
-    const schemes: { row: number; column: number } = {
-        row: rowTemp[1][0],
-        column: rowTemp[0][0],
-    };
-    console.log(`データ開始行: ${schemes.row}`);
-    console.log(`データ開始列: ${schemes.column}`);
+    const schemes = getSettingData(sheet);
 
     if (isNaN(schemes.row)) {
         console.log(
@@ -20,33 +49,7 @@ function _writeCalendar(sheet: GoogleAppsScript.Spreadsheet.Sheet): void {
         return undefined;
     }
 
-    interface Record {
-        event: Event;
-        id: string;
-        calendarId: string;
-    }
     // sheetから記録を入手
-    // 一番最後の要素の値をenumの要素数計算に使用する
-    const enum RecordDataIndex {
-        Title = 0,
-        Expectation,
-        ActualAction,
-        EmotionTag,
-        Remarks,
-        StartYear,
-        StartMonth,
-        StartDate,
-        StartHour,
-        StartMinute,
-        EndYear,
-        EndMonth,
-        EndDate,
-        EndHour,
-        EndMinute,
-        EventId,
-        CalendarId,
-    }
-
     const records: Record[] = sheet
         .getRange(
             schemes.row,
@@ -77,24 +80,24 @@ function _writeCalendar(sheet: GoogleAppsScript.Spreadsheet.Sheet): void {
                     ),
                     (record[RecordDataIndex.Expectation] != ''
                         ? '# 作業予定内容\n\n' +
-                          record[RecordDataIndex.Expectation] +
-                          '\n\n'
+                        record[RecordDataIndex.Expectation] +
+                        '\n\n'
                         : '') +
-                        (record[RecordDataIndex.ActualAction] != ''
-                            ? '# 実際の作業結果\n\n' +
-                              record[RecordDataIndex.ActualAction] +
-                              '\n\n'
-                            : '') +
-                        (record[RecordDataIndex.EmotionTag] != ''
-                            ? '## 作業時の心情\n\n' +
-                              record[RecordDataIndex.EmotionTag] +
-                              '\n\n'
-                            : '') +
-                        (record[RecordDataIndex.Remarks] != ''
-                            ? '# 備考\n\n' + record[RecordDataIndex.Remarks]
-                            : '')
+                    (record[RecordDataIndex.ActualAction] != ''
+                        ? '# 実際の作業結果\n\n' +
+                        record[RecordDataIndex.ActualAction] +
+                        '\n\n'
+                        : '') +
+                    (record[RecordDataIndex.EmotionTag] != ''
+                        ? '## 作業時の心情\n\n' +
+                        record[RecordDataIndex.EmotionTag] +
+                        '\n\n'
+                        : '') +
+                    (record[RecordDataIndex.Remarks] != ''
+                        ? '# 備考\n\n' + record[RecordDataIndex.Remarks]
+                        : '')
                 ),
-                id: record[RecordDataIndex.EventId],
+                eventId: record[RecordDataIndex.EventId],
                 calendarId: record[RecordDataIndex.CalendarId],
             };
         });
@@ -113,8 +116,8 @@ function _writeCalendar(sheet: GoogleAppsScript.Spreadsheet.Sheet): void {
 
         const recordCalendar: Calendar = new Calendar(record.calendarId);
         // 既に登録済みの記録であれば、更新する
-        if (record.id != '') {
-            recordCalendar.ModifyEvent(record.id, record.event);
+        if (record.eventId != '') {
+            recordCalendar.ModifyEvent(record.eventId, record.event);
             console.log(`done.`);
             continue;
         }
