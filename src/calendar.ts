@@ -65,10 +65,6 @@ export class Calendar {
         this.calendar = CalendarApp.getCalendarById(calendarId);
     }
 
-    public GetEvents(period: TimeSpan): CalendarEvent[] {
-        return this.calendar.getEvents(period.start, period.end);
-    }
-
     public ModifyEvent(eventId: string, newEvent: Event): void {
         const event = this.calendar.getEventById(eventId);
         if (event.getTitle() != newEvent.title) event.setTitle(newEvent.title);
