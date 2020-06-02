@@ -134,7 +134,7 @@ function _writeCalendar(sheet: GoogleAppsScript.Spreadsheet.Sheet): void {
 
 function writeCalendar(): void {
     const sheet = SpreadsheetApp.getActiveSheet();
-    if (sheet.getRange(3, 2, 1, 1).getValue() == 0) {
+    if (sheet.getRange(3, 2, 1, 1).getValue() != 1) {
         // calendar用のsheetでなければ何もしない
         return undefined;
     }
