@@ -55,7 +55,7 @@ function _writeCalendar(sheet: GoogleAppsScript.Spreadsheet.Sheet): void {
             RecordDataIndex.CalendarId + 1 // 読み込むrecordの総数
         )
         .getValues()
-        .map((record) => {
+        .map((record: any[]) => {
             return {
                 event: new Event(
                     record[RecordDataIndex.Title],
