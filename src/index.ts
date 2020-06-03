@@ -1,11 +1,14 @@
-import {Calendar, Event, getDateFixed, TimeSpan} from './calendar';
+import { Calendar, Event, getDateFixed, TimeSpan } from './calendar';
+import { OnEditEventObject } from './EventObject';
 
-function getSettingData(sheet: GoogleAppsScript.Spreadsheet.Sheet): {row: number; column: number} {
+function getSettingData(
+    sheet: GoogleAppsScript.Spreadsheet.Sheet
+): { row: number; column: number } {
     const temp = sheet.getRange(1, 2, 2, 1).getValues() as number[][];
     // debug用
     console.log(`データ開始行: ${temp[1][0]}`);
     console.log(`データ開始列: ${temp[0][0]}`);
-    return {row: temp[1][0], column: temp[0][0]};
+    return { row: temp[1][0], column: temp[0][0] };
 }
 
 interface Record {
@@ -80,22 +83,22 @@ function _writeCalendar(sheet: GoogleAppsScript.Spreadsheet.Sheet): void {
                     ),
                     (record[RecordDataIndex.Expectation] != ''
                         ? '# 作業予定内容\n\n' +
-                        record[RecordDataIndex.Expectation] +
-                        '\n\n'
+                          record[RecordDataIndex.Expectation] +
+                          '\n\n'
                         : '') +
-                    (record[RecordDataIndex.ActualAction] != ''
-                        ? '# 実際の作業結果\n\n' +
-                        record[RecordDataIndex.ActualAction] +
-                        '\n\n'
-                        : '') +
-                    (record[RecordDataIndex.EmotionTag] != ''
-                        ? '## 作業時の心情\n\n' +
-                        record[RecordDataIndex.EmotionTag] +
-                        '\n\n'
-                        : '') +
-                    (record[RecordDataIndex.Remarks] != ''
-                        ? '# 備考\n\n' + record[RecordDataIndex.Remarks]
-                        : '')
+                        (record[RecordDataIndex.ActualAction] != ''
+                            ? '# 実際の作業結果\n\n' +
+                              record[RecordDataIndex.ActualAction] +
+                              '\n\n'
+                            : '') +
+                        (record[RecordDataIndex.EmotionTag] != ''
+                            ? '## 作業時の心情\n\n' +
+                              record[RecordDataIndex.EmotionTag] +
+                              '\n\n'
+                            : '') +
+                        (record[RecordDataIndex.Remarks] != ''
+                            ? '# 備考\n\n' + record[RecordDataIndex.Remarks]
+                            : '')
                 ),
                 eventId: record[RecordDataIndex.EventId],
                 calendarId: record[RecordDataIndex.CalendarId],
@@ -132,12 +135,13 @@ function _writeCalendar(sheet: GoogleAppsScript.Spreadsheet.Sheet): void {
     }
 }
 
-function writeCalendar(): void {
+function writeCalendar(e: OnEditEventObject): void {
     const sheet = SpreadsheetApp.getActiveSheet();
     if (sheet.getRange(3, 2, 1, 1).getValue() != 1) {
         // calendar用のsheetでなければ何もしない
         return undefined;
     }
+    console.log(`event objectの中身：${JSON.stringify(e)}`);
     // SpreadSheetからdateの予定を
     // 取得
     if (sheet == null) {
