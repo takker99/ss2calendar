@@ -1,11 +1,23 @@
 {
   "timeZone": "America/New_York",
+  "dependencies": {
+    "enabledAdvancedServices": [{
+      "userSymbol": "Calendar",
+      "serviceId": "calendar",
+      "version": "v3"
+    }],
+    "libraries": [{
+      "userSymbol": "Moment",
+      "libraryId": "15hgNOjKHUG4UtyZl9clqBbl23sDvWMS8pfDJOyIapZk5RBqwL3i-rlCo",
+      "version": "9"
+    }]
+  },
   "exceptionLogging": "STACKDRIVER",
   "runtimeVersion": "V8",
   "sheets": {
-      "macros": [{
-          "menuName": "writeCalendar",
-          "functionName": "writeCalendar"
-      }]
+    "macros": [{
+      "menuName": "writeCalendar",
+      "functionName": "writeCalendar"
+    }]
   }
 }
