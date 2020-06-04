@@ -1,9 +1,9 @@
 export interface OnEditEventObject {
-    authMode: GoogleAppsScript.Script.AuthMode;
-    oldValue: object | null;
-    range: GoogleAppsScript.Spreadsheet.Range;
-    source: GoogleAppsScript.Spreadsheet.Spreadsheet;
-    triggerUid: string;
-    user: GoogleAppsScript.Base.User;
-    value: object | null;
+    readonly authMode: GoogleAppsScript.Script.AuthMode;
+    readonly oldValue?: object;
+    readonly range: GoogleAppsScript.Spreadsheet.Range;
+    readonly source: GoogleAppsScript.Spreadsheet.Spreadsheet;
+    readonly triggerUid?: string;
+    readonly user: GoogleAppsScript.Base.User;
+    readonly value?: object;
 }
