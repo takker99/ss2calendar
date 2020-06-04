@@ -1,5 +1,6 @@
 import { Calendar, Event, getDateFixed, TimeSpan } from './calendar';
 import { OnEditEventObject } from './EventObject';
+import { SettingManager } from './settingManager';
 
 function getSettingData(
     sheet: GoogleAppsScript.Spreadsheet.Sheet
@@ -137,17 +138,19 @@ function _writeCalendar(sheet: GoogleAppsScript.Spreadsheet.Sheet): void {
 
 function writeCalendar(e: OnEditEventObject): void {
     const sheet = SpreadsheetApp.getActiveSheet();
-    if (sheet.getRange(3, 2, 1, 1).getValue() != 1) {
-        // calendar用のsheetでなければ何もしない
-        return undefined;
-    }
     console.log(`event objectの中身：${JSON.stringify(e)}`);
-    // SpreadSheetからdateの予定を
-    // 取得
     if (sheet == null) {
         console.log("the target sheet doesn't exist.");
         return undefined;
     }
+    const settings = new SettingManager(sheet);
+    if (settings.isSync) {
+        // calendar用のsheetでなければ何もしない
+        return undefined;
+    }
+
+    // SpreadSheetからdateの予定を
+    // 取得
     _writeCalendar(sheet);
 }
 
