@@ -3,7 +3,7 @@
 export class SettingManager {
     constructor(settingSheet: GoogleAppsScript.Spreadsheet.Sheet) {
         // 転置に使うlambda expression
-        const transpose = <T>(a: T[][]) =>
+        const transpose = <T>(a: T[][]): T[][] =>
             a[0].map((_, c) => a.map((r) => r[c]));
         const temp = transpose(
             settingSheet.getRange(1, 2, 27, 1).getValues() as number[][]
