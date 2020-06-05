@@ -1,5 +1,6 @@
 import * as moment from 'moment';
 import { OnEditEventObject } from './EventObject';
+import { SettingManager } from './settingManager';
 const Moment = { moment: moment };
 
 // userが編集したときに発火する函数
@@ -54,8 +55,8 @@ function addRecord(): void {
     const settingSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(
         'settings'
     );
-    if (settingSheet == null) return undefined;
-    const settings = settingSheet.getRange(1, 2, 25, 1).getValues();
+    if (settingSheet == null) return;
+    const settings = new SettingManager(settingSheet);
 
     const now = Moment.moment().zone('+09:00');
     console.log(`現在時刻: ${now}`);
@@ -65,59 +66,30 @@ function addRecord(): void {
     sheet.appendRow(['test', ...nowDate, nowTime, ...nowDate, '']);
 
     // 数式を記入
-    const durationColumn = settings[17][0];
     sheet
-        .getRange(sheet.getLastRow(), durationColumn)
+        .getRange(sheet.getLastRow(), settings.record.index.timeSpan)
         .setFormulaR1C1('=RC[-1]-RC[-5]');
 
     // 入力規則を追加
-    const emotionList = {
-        row: settings[1][0],
-        column: settings[2][0],
-        length: settings[3][0],
-    };
-    console.log(
-        `emotion: [row,column,length]=[${emotionList.row},${emotionList.column},${emotionList.length}]`
-    );
+    console.log(`emotion: ${settings.emotionList.getValues() as string[][]}`);
     const rules: GoogleAppsScript.Spreadsheet.DataValidation[] = [
         SpreadsheetApp.newDataValidation()
-            .requireValueInRange(
-                settingSheet.getRange(
-                    emotionList.row,
-                    emotionList.column,
-                    emotionList.length,
-                    1
-                )
-            )
+            .requireValueInRange(settings.emotionList)
             .build(),
     ];
 
-    const tagList = {
-        row: settings[4][0],
-        column: settings[5][0],
-        length: settings[6][0],
-    };
-    console.log(
-        `emotion: [row,column,length]=[${tagList.row},${tagList.column},${tagList.length}]`
-    );
+    console.log(`tags: ${settings.tagList}`);
     rules[1] = SpreadsheetApp.newDataValidation()
-        .requireValueInRange(
-            settingSheet.getRange(
-                tagList.row,
-                tagList.column,
-                tagList.length,
-                1
-            )
-        )
+        .requireValueInRange(settings.calendarIdList)
         .build();
 
-    const tagColumn = settings[8][0];
-    const emotionColumn = settings[22][0];
-
-    let temp = sheet.getRange(sheet.getLastRow(), emotionColumn);
+    let temp = sheet.getRange(
+        sheet.getLastRow(),
+        settings.record.index.emotionTag
+    );
     temp.clearDataValidations();
     temp.setDataValidation(rules[0]);
-    temp = sheet.getRange(sheet.getLastRow(), tagColumn);
+    temp = sheet.getRange(sheet.getLastRow(), settings.record.index.tag);
     temp.clearDataValidations();
     temp.setDataValidation(rules[1]);
 }
