@@ -149,14 +149,3 @@ function writeCalendar(e: OnEditEventObject): void {
     // 取得
     _writeCalendar(sheet, settings);
 }
-
-function writeSchedule(): void {
-    const sheet = SpreadsheetApp.getActiveSheet();
-    // SpreadSheetからdateの予定を
-    // 取得
-    if (sheet == null) {
-        console.log("the target sheet doesn't exist.");
-        return undefined;
-    }
-    _writeCalendar(sheet);
-}
