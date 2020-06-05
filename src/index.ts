@@ -39,27 +39,23 @@ const enum RecordDataIndex {
     CalendarId,
 }
 
-function _writeCalendar(sheet: GoogleAppsScript.Spreadsheet.Sheet): void {
+function _writeCalendar(
+    sheet: GoogleAppsScript.Spreadsheet.Sheet,
+    setting: SettingManager
+): void {
     // 二次元配列転置用lambda式
     // シートにあるデータから
     // - calendarと同期するevent dataの開始cellの位置
     // を取得
     const schemes = getSettingData(sheet);
 
-    if (isNaN(schemes.row)) {
-        console.log(
-            '記録用のデータがありません。データの列の位置がずれている可能性があります'
-        );
-        return undefined;
-    }
-
     // sheetから記録を入手
     const records: Record[] = sheet
         .getRange(
-            schemes.row,
-            schemes.column,
+            setting.record.firstLine,
+            setting.record.columnFlont,
             sheet.getLastRow() - 1,
-            RecordDataIndex.CalendarId + 1 // 読み込むrecordの総数
+            setting.recordLength()
         )
         .getValues()
         .map((record: any[]) => {
@@ -151,7 +147,7 @@ function writeCalendar(e: OnEditEventObject): void {
 
     // SpreadSheetからdateの予定を
     // 取得
-    _writeCalendar(sheet);
+    _writeCalendar(sheet, settings);
 }
 
 function writeSchedule(): void {
