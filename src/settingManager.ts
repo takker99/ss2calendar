@@ -10,6 +10,12 @@ export class SettingManager {
         )[0];
 
         this.isSync = temp[1] == 1 ? true : false;
+        this.record = {
+            firstLine: temp[7],
+            columnFlont: temp[8],
+            columnEnd: temp[9],
+        };
+
         const emotionListLocation = {
             startRow: temp[1],
             startColumn: temp[2],
@@ -43,8 +49,17 @@ export class SettingManager {
             this.tagList[pair[0]] = pair[1];
         }
     }
+
+    public recordLength(): number {
+        return this.record.columnEnd - this.record.columnFlont + 1;
+    }
     // true: 同期が有効 false:同期を停止
     public readonly isSync: boolean;
+    public readonly record: {
+        firstLine: number;
+        columnFlont: number;
+        columnEnd: number;
+    };
     public readonly emotionList: string[];
     public readonly tagList: { [index: string]: string } = {};
 }
