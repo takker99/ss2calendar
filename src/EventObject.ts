@@ -7,3 +7,9 @@ export interface OnEditEventObject {
     readonly user: GoogleAppsScript.Base.User;
     readonly value?: object;
 }
+
+export interface GoogleCalendarEventObject{
+    readonly authMode: GoogleAppsScript.Script.AuthMode;
+    readonly calendarId: string;
+    readonly triggerUid: number;
+}

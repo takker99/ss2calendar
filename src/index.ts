@@ -1,5 +1,5 @@
 import { Calendar, Event, getDateFixed, TimeSpan } from './calendar';
-import { OnEditEventObject } from './EventObject';
+import { OnEditEventObject, GoogleCalendarEventObject } from './EventObject';
 import {
     SettingInfo,
     writingAreaLength,
@@ -87,6 +87,20 @@ function updateEvent(
     console.log(`event ID: ${eventId}`);
     sheet.getRange(record.row, setting.record.write.eventId).setValue(eventId);
     console.log(`done.`);
+}
+
+// Google Calendarから、直近一ヶ月以内で最後に更新したeventのIDを取得する
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function getLastUpdatedEvent(
+    calendarId: string
+): GoogleAppsScript.Calendar.CalendarEvent {
+    const now = Moment.moment().zone('+09:00');
+    return CalendarApp.getCalendarById(calendarId)
+        .getEvents(now.subtract(1, 'months').toDate(), now.toDate())
+        .reduce((a, b) => (a.getLastUpdated() < b.getLastUpdated() ? b : a));
+}
+function writeSpreadSheet(e: GoogleCalendarEventObject): void {
+    const changedEvent = getLastUpdatedEvent(e.calendarId);
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -211,6 +225,23 @@ function writeEvent(
         range.clearDataValidations();
         range.setDataValidations([rules]);
     } else {
+        if (record.eventId != '') {
+            // event IDから変更を適用する行を検索する
+            const searchedEventRow =
+                (sheet
+                    .getRange(
+                        setting.record.firstLine,
+                        setting.record.write.eventId,
+                        sheet.getLastRow() - setting.record.firstLine + 1,
+                        1
+                    )
+                    .getValues()[0] as string[]).findIndex(
+                    (value) => value == record.eventId
+                ) + setting.record.firstLine;
+            // 行が存在したらそこに書き込む
+            if (searchedEventRow != undefined)
+                return writeEvent(record, sheet, searchedEventRow);
+        }
         // 新しい行を追加
         sheet.insertRowAfter(sheet.getLastRow());
         writeEvent(record, sheet, sheet.getLastRow() + 1);
