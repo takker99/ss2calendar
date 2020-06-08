@@ -12,4 +12,4 @@ Google SpreadSheetとGoogle Calendarのeventsを同期させるscripts
 ## TODO
 
 - [ ] Calendar=>SpreadSheetの方向に同期できるようにする
-- [ ] 同期先のCalendarを選択できるようにする
+- [x] 同期先のCalendarを選択できるようにする
