@@ -58,7 +58,7 @@ function getRecords(
 
 // eventを更新する
 function updateEvent(
-    record: Record,
+    record: Required<Record>,
     sheet: GoogleAppsScript.Spreadsheet.Sheet,
     setting: SettingInfo
 ): void {
