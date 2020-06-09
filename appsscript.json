@@ -18,6 +18,9 @@
     "macros": [{
       "menuName": "writeCalendar",
       "functionName": "writeCalendar"
+    }, {
+      "menuName": "updateConditionalFormat",
+      "functionName": "updateConditionalFormat"
     }]
   }
 }
