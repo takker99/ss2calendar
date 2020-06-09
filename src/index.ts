@@ -77,12 +77,14 @@ function updateEvent(
     const recordCalendar = new Calendar(record.calendarId);
     // 既に登録済みの記録であれば、更新する
     if (record.eventId != '') {
+        console.log('Updating the event...');
         recordCalendar.Modify(record.eventId, record.event);
         console.log(`done.`);
         return;
     }
 
     // event IDを新規登録する
+    console.log('Registering a new event...');
     const eventId = recordCalendar.Add(record.event);
     console.log(`event ID: ${eventId}`);
     sheet.getRange(record.row, setting.record.write.eventId).setValue(eventId);
