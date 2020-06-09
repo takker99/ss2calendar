@@ -23,10 +23,10 @@ function getRecords(
     rawRecords: any[][],
     firstRow: number,
     setting: SettingInfo
-): Record[] {
+): Required<Record>[] {
     return rawRecords.map(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (rawRecord: any[], index: number): Record => {
+        (rawRecord: any[], index: number): Required<Record> => {
             return {
                 row: firstRow + index,
                 event: new Event(
@@ -74,39 +74,61 @@ function updateEvent(
     console.log(`end: ${record.event.end}`);
     console.log(`description: ${record.event.description}`);
 
+    const metaData: { [key: string]: string } = {
+        spreadSheetId: sheet.getParent().getId(),
+        sheetName: sheet.getSheetName(),
+        row: record.row.toString(),
+    };
+
     const recordCalendar = new Calendar(record.calendarId);
     // 既に登録済みの記録であれば、更新する
     if (record.eventId != '') {
         console.log('Updating the event...');
-        recordCalendar.Modify(record.eventId, record.event);
+        recordCalendar.Modify(record.eventId, record.event, metaData);
         console.log(`done.`);
         return;
     }
 
     // event IDを新規登録する
     console.log('Registering a new event...');
-    const eventId = recordCalendar.Add(record.event);
+    const eventId = recordCalendar.Add(record.event, metaData);
     console.log(`event ID: ${eventId}`);
     sheet.getRange(record.row, setting.record.write.eventId).setValue(eventId);
     console.log(`done.`);
 }
 
-// Google Calendarから、直近一ヶ月以内で最後に更新したeventのIDを取得する
+// Google Calendarから、直近一ヶ月以内で最後に更新したeventを取得する
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function getLastUpdatedEvent(
     calendarId: string
-): GoogleAppsScript.Calendar.CalendarEvent {
-    const now = Moment.moment().zone('+09:00');
-    return CalendarApp.getCalendarById(calendarId)
-        .getEvents(now.subtract(1, 'months').toDate(), now.toDate())
-        .reduce((a, b) => (a.getLastUpdated() < b.getLastUpdated() ? b : a));
+): GoogleAppsScript.Calendar.CalendarEvent | undefined {
+    const momentNow = Moment.moment().zone('+09:00');
+    const now = momentNow.toDate();
+    const aMonthAgo = momentNow.subtract(1, 'months').toDate();
+    console.log(
+        `Getting events from ${CalendarApp.getCalendarById(
+            calendarId
+        ).getName()} between ${aMonthAgo} and ${now}...`
+    );
+    const events = CalendarApp.getCalendarById(calendarId).getEvents(
+        aMonthAgo,
+        now
+    );
+    // このようにDateの生成を介さないで直接引数に代入すると失敗する。
+    // const events = CalendarApp.getCalendarById(calendarId).getEvents(now_.subtract(1, 'months').toDate(), now_.toDate());
+    console.log(`Got ${events.length} events.`);
+    return events.length > 1
+        ? events.reduce((a, b) =>
+              a.getLastUpdated() < b.getLastUpdated() ? b : a
+          )
+        : undefined;
 }
 
 // Google Apps Script形式のcalendar eventからRecordを生成する
 function toRecord(
     event: GoogleAppsScript.Calendar.CalendarEvent,
     calendarId: string
-): Record {
+): Required<Record> {
     const startTime = Moment.moment({
         years: event.getStartTime().getFullYear(),
         months: event.getStartTime().getMonth(),
@@ -126,20 +148,165 @@ function toRecord(
         event: new Event(event.getTitle(), timeSpan, event.getDescription()),
         eventId: event.getId(),
         calendarId: calendarId,
+        row: Number(event.getTag('row')),
     };
 }
+
+// event をsheetに書き込む
+function writeEvent(
+    record: Record,
+    sheet: GoogleAppsScript.Spreadsheet.Sheet
+): void {
+    const setting = SettingManager.load();
+    if (setting == undefined) {
+        console.error('Failed to load settings');
+        return;
+    }
+
+    if (record.row) {
+        console.log('Start updating the sheet');
+        console.log(`Target spread sheet: ${sheet.getParent().getName()}`);
+        console.log(`Target sheet: ${sheet.getSheetName()}`);
+        console.log(`Row index: ${record.row}`);
+        const range = sheet.getRange(
+            record.row,
+            setting.record.columnFlont,
+            1,
+            writingAreaLength(setting)
+        );
+
+        const getHHMM = (time: moment.Moment): string => {
+            const temp = time.toDate();
+            return Utilities.formatDate(temp, 'JST', 'HH:mm');
+            /* return `${('00' + time.hours().toString()).slice(-2)}:${( */
+            /*     '00' + time.minutes().toString() */
+            /* ).slice(-2)}`; */
+        };
+
+        const temp = new Array(writingAreaLength(setting));
+        temp[setting.record.write.tag - 1] = toTag(setting, record.calendarId);
+        temp[setting.record.write.start.year - 1] = record.event.start.year();
+        temp[setting.record.write.start.month - 1] =
+            record.event.start.month() + 1;
+        temp[setting.record.write.start.date - 1] = record.event.start.date();
+        temp[setting.record.write.start.time - 1] = getHHMM(record.event.start);
+        temp[setting.record.write.end.year - 1] = record.event.end.year();
+        temp[setting.record.write.end.month - 1] = record.event.end.month() + 1;
+        temp[setting.record.write.end.date - 1] = record.event.end.date();
+        temp[setting.record.write.end.time - 1] = getHHMM(record.event.end);
+        temp[setting.record.write.title - 1] = record.event.title;
+        temp[setting.record.write.eventId - 1] = record.eventId;
+
+        // description は扱いが特殊。
+        // 1. 既存セルに値が存在する場合：
+        //    既存の値を使う
+        // 2. 値がない場合
+        //    remarks欄にeventのdescriptionを代入する
+        const oldValue = range.getValues()[0];
+        const oldDescription = [
+            oldValue[setting.record.write.expectation],
+            oldValue[setting.record.write.actualAction],
+            oldValue[setting.record.write.emotionTag],
+            oldValue[setting.record.write.remarks],
+        ];
+        if (oldDescription.length > 0) {
+            temp[setting.record.write.expectation] = oldDescription[0];
+            temp[setting.record.write.actualAction] = oldDescription[1];
+            temp[setting.record.write.emotionTag] = oldDescription[2];
+            temp[setting.record.write.remarks] = oldDescription[3];
+        } else {
+            temp[setting.record.write.remarks] = record.event.description;
+        }
+
+        console.log(`These data will be writen:\n${temp}`);
+        range.setValues([temp]);
+        console.log('done.');
+
+        // 入力規則を追加
+        const rules: GoogleAppsScript.Spreadsheet.DataValidation[] = new Array(
+            writingAreaLength(setting)
+        );
+        rules[
+            setting.record.write.tag - 1
+        ] = SpreadsheetApp.newDataValidation()
+            .requireValueInRange(setting.tagList)
+            .build();
+        rules[
+            setting.record.write.emotionTag - 1
+        ] = SpreadsheetApp.newDataValidation()
+            .requireValueInRange(setting.emotionList)
+            .build();
+
+        range.clearDataValidations();
+        range.setDataValidations([rules]);
+    } else {
+        console.log(
+            'Row index is unknown. Search event IDs for the row index.'
+        );
+        if (record.eventId != '') {
+            // event IDから変更を適用する行を検索する
+            const result = (sheet
+                .getRange(
+                    setting.record.firstLine,
+                    setting.record.write.eventId,
+                    sheet.getLastRow() - setting.record.firstLine + 1,
+                    1
+                )
+                .getValues()[0] as string[]).findIndex(
+                (value) => value == record.eventId
+            );
+            // 行が存在したらそこに書き込む
+            if (result > 0) {
+                console.log('Found the row index');
+                record.row = result + setting.record.firstLine;
+                return writeEvent(record, sheet);
+            }
+        }
+        // 新しい行を追加
+        console.log('Create new line and write this record');
+        sheet.insertRowAfter(sheet.getLastRow());
+        record.row = sheet.getLastRow() + 1;
+        writeEvent(record, sheet);
+    }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function writeSpreadSheet(e: GoogleCalendarEventObject): void {
     const changedEvent = getLastUpdatedEvent(e.calendarId);
-    // 繰り返しeventは対象外
-    if (changedEvent.isRecurringEvent()) return;
-    const changedRecord = toRecord(changedEvent, e.calendarId);
 
-    // 現在のsheetを読み込む
-    const sheet = SpreadsheetApp.getActiveSheet();
+    // 繰り返しeventは対象外
+    if (changedEvent == undefined || changedEvent.isRecurringEvent()) {
+        console.log('No event in a last month need to be changed.');
+        return;
+    }
+
+    // 更新したいeventが記録されているsheetを開く
+    if (changedEvent.getTag('spreadSheetId') == undefined) {
+        // sheetが指定されていないeventは、Calendarから作成したeventとみなす
+        // どう対処したらいいか思いつかないので、Sheetには書き込まないでおく
+        // - どのsheetに書き込めばいいかわからない
+        console.log('Skip synchronizing.');
+        return;
+    }
+    const sheet = SpreadsheetApp.openById(
+        changedEvent.getTag('spreadSheetId')
+    ).getSheetByName(changedEvent.getTag('sheetName'));
+
     if (sheet == null) {
         console.error("the target sheet doesn't exist.");
         return;
     }
+
+    const changedRecord = toRecord(changedEvent, e.calendarId);
+    // for debug
+    console.log(
+        `This event has been changed and is going to be writen at ${sheet.getSheetName()}:`
+    );
+    console.log(`Title: ${changedRecord.event.title}`);
+    console.log(`Description: ${changedRecord.event.description}`);
+    console.log(`Start with ${changedRecord.event.start.toISOString()}`);
+    console.log(`End with ${changedRecord.event.end.toISOString()}`);
+    console.log(`Event Id:  ${changedRecord.eventId}`);
 
     // sheetに書き込む
     writeEvent(changedRecord, sheet);
@@ -219,85 +386,6 @@ function updateConditionalFormat(): void {
             .build(),
     ];
     sheet.setConditionalFormatRules(rules);
-}
-
-function getHHMM(time: moment.Moment): string {
-    return `${('00' + time.hours().toString()).slice(-2)}:${(
-        '00' + time.minutes().toString()
-    ).slice(-2)}`;
-}
-// event をsheetに書き込む
-function writeEvent(
-    record: Record,
-    sheet: GoogleAppsScript.Spreadsheet.Sheet
-): void {
-    const setting = SettingManager.load();
-    if (setting == undefined) return;
-
-    if (record.row) {
-        const range = sheet.getRange(
-            record.row,
-            setting.record.columnFlont,
-            1,
-            writingAreaLength(setting)
-        );
-        const temp = new Array(writingAreaLength(setting));
-        temp[setting.record.write.tag - 1] = toTag(setting, record.calendarId);
-        temp[setting.record.write.start.year - 1] = record.event.start.year();
-        temp[setting.record.write.start.month - 1] =
-            record.event.start.month() + 1;
-        temp[setting.record.write.start.date - 1] = record.event.start.date();
-        temp[setting.record.write.start.time - 1] = getHHMM(record.event.start);
-        temp[setting.record.write.end.year - 1] = record.event.end.year();
-        temp[setting.record.write.end.month - 1] = record.event.end.month() + 1;
-        temp[setting.record.write.end.date - 1] = record.event.end.date();
-        temp[setting.record.write.end.time - 1] = getHHMM(record.event.end);
-        temp[setting.record.write.title - 1] = record.event.title;
-        temp[setting.record.write.eventId - 1] = record.eventId;
-        range.setValues([temp]);
-
-        // 入力規則を追加
-        const rules: GoogleAppsScript.Spreadsheet.DataValidation[] = new Array(
-            writingAreaLength(setting)
-        );
-        rules[
-            setting.record.write.tag - 1
-        ] = SpreadsheetApp.newDataValidation()
-            .requireValueInRange(setting.tagList)
-            .build();
-        rules[
-            setting.record.write.emotionTag - 1
-        ] = SpreadsheetApp.newDataValidation()
-            .requireValueInRange(setting.emotionList)
-            .build();
-
-        range.clearDataValidations();
-        range.setDataValidations([rules]);
-    } else {
-        if (record.eventId != '') {
-            // event IDから変更を適用する行を検索する
-            const searchedEventRow =
-                (sheet
-                    .getRange(
-                        setting.record.firstLine,
-                        setting.record.write.eventId,
-                        sheet.getLastRow() - setting.record.firstLine + 1,
-                        1
-                    )
-                    .getValues()[0] as string[]).findIndex(
-                    (value) => value == record.eventId
-                ) + setting.record.firstLine;
-            // 行が存在したらそこに書き込む
-            if (searchedEventRow != undefined) {
-                record.row = searchedEventRow;
-                return writeEvent(record, sheet);
-            }
-        }
-        // 新しい行を追加
-        sheet.insertRowAfter(sheet.getLastRow());
-        record.row = sheet.getLastRow() + 1;
-        writeEvent(record, sheet);
-    }
 }
 
 function _writeCalendar(
