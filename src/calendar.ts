@@ -27,7 +27,11 @@ export class Calendar {
         this.calendar = CalendarApp.getCalendarById(calendarId);
     }
 
-    public Modify(eventId: string, newEvent: Event): void {
+    public Modify(
+        eventId: string,
+        newEvent: Event,
+        metaData?: { [key: string]: string }
+    ): void {
         const event = this.calendar.getEventById(eventId);
         if (event.getTitle() != newEvent.title) event.setTitle(newEvent.title);
         if (
@@ -37,15 +41,26 @@ export class Calendar {
             event.setTime(newEvent.start.toDate(), newEvent.end.toDate());
         if (event.getDescription() != newEvent.option.description)
             event.setDescription(newEvent.option.description);
+        if (metaData) {
+            for (const key in metaData) {
+                if (event.getTag(key) != metaData.key)
+                    event.setTag(key, metaData[key]);
+            }
+        }
     }
 
-    public Add(event: Event): string {
+    public Add(event: Event, metaData?: { [key: string]: string }): string {
         const result = this.calendar.createEvent(
             event.title,
             event.start.toDate(),
             event.end.toDate(),
             event.option
         );
+        if (metaData) {
+            for (const key in metaData) {
+                result.setTag(key, metaData[key]);
+            }
+        }
         return result.getId();
     }
 
