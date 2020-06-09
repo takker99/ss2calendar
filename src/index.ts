@@ -12,7 +12,7 @@ const Moment = { moment: moment }; // GAS対策 cf. https://qiita.com/awa2/items
 
 interface Record {
     event: Event;
-    row: number;
+    row?: number;
     eventId: string;
     calendarId: string;
 }
@@ -99,8 +99,54 @@ function getLastUpdatedEvent(
         .getEvents(now.subtract(1, 'months').toDate(), now.toDate())
         .reduce((a, b) => (a.getLastUpdated() < b.getLastUpdated() ? b : a));
 }
+
+// Google Apps Script形式のcalendar eventからRecordを生成する
+function toRecord(
+    event: GoogleAppsScript.Calendar.CalendarEvent,
+    calendarId: string
+): Record {
+    const startTime = Moment.moment({
+        years: event.getStartTime().getFullYear(),
+        months: event.getStartTime().getMonth(),
+        day: event.getStartTime().getDate(),
+        hours: event.getStartTime().getHours(),
+        minutes: event.getStartTime().getMinutes(),
+    });
+    const endTime = Moment.moment({
+        years: event.getEndTime().getFullYear(),
+        months: event.getEndTime().getMonth(),
+        day: event.getEndTime().getDate(),
+        hours: event.getEndTime().getHours(),
+        minutes: event.getEndTime().getMinutes(),
+    });
+    const timeSpan = new TimeSpan(startTime, endTime);
+    return {
+        event: new Event(event.getTitle(), timeSpan, event.getDescription()),
+        eventId: event.getId(),
+        calendarId: calendarId,
+    };
+}
 function writeSpreadSheet(e: GoogleCalendarEventObject): void {
     const changedEvent = getLastUpdatedEvent(e.calendarId);
+    // 繰り返しeventは対象外
+    if (changedEvent.isRecurringEvent()) return;
+    const changedRecord = toRecord(changedEvent, e.calendarId);
+
+    // 現在のsheetを読み込む
+    const sheet = SpreadsheetApp.getActiveSheet();
+    if (sheet == null) {
+        console.error("the target sheet doesn't exist.");
+        return;
+    }
+
+    // sheetに書き込む
+    writeEvent(changedRecord, sheet);
+
+    //TODO: 対応するeventIdが存在しなかったら、
+    // - 新規作成する
+    //   if calendarがrecord,tus,tus-cv以外
+    // - 作成をskipしたとlogに書き込む
+    //   otherwise
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -123,6 +169,8 @@ function updateConditionalFormat(): void {
         1
     );
 
+    // 条件付き書式を再作成する
+    //   各task終了時間に応じてtaskの色分けをする
     sheet.clearConditionalFormatRules();
     const rules = [
         SpreadsheetApp.newConditionalFormatRule()
@@ -179,15 +227,14 @@ function getHHMM(time: moment.Moment): string {
 // event をsheetに書き込む
 function writeEvent(
     record: Record,
-    sheet: GoogleAppsScript.Spreadsheet.Sheet,
-    row?: number
+    sheet: GoogleAppsScript.Spreadsheet.Sheet
 ): void {
     const setting = SettingManager.load();
     if (setting == undefined) return;
 
-    if (row) {
+    if (record.row) {
         const range = sheet.getRange(
-            row,
+            record.row,
             setting.record.columnFlont,
             1,
             writingAreaLength(setting)
@@ -239,12 +286,15 @@ function writeEvent(
                     (value) => value == record.eventId
                 ) + setting.record.firstLine;
             // 行が存在したらそこに書き込む
-            if (searchedEventRow != undefined)
-                return writeEvent(record, sheet, searchedEventRow);
+            if (searchedEventRow != undefined) {
+                record.row = searchedEventRow;
+                return writeEvent(record, sheet);
+            }
         }
         // 新しい行を追加
         sheet.insertRowAfter(sheet.getLastRow());
-        writeEvent(record, sheet, sheet.getLastRow() + 1);
+        record.row = sheet.getLastRow() + 1;
+        writeEvent(record, sheet);
     }
 }
 
