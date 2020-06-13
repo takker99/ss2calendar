@@ -318,6 +318,7 @@ function writeSpreadSheet(e: GoogleCalendarEventObject): void {
     //   otherwise
 }
 
+// actionを実行した時間帯に応じて、action nameの色を変える
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function updateConditionalFormat(): void {
     const sheet = SpreadsheetApp.getActiveSheet();
@@ -382,6 +383,7 @@ function updateConditionalFormat(): void {
                 '=hour(timevalue($I4))*60+minute(timevalue($I4))<24*60'
             )
             .setBackground('#351c75')
+            .setFontColor('#FFFFFF')
             .setRanges([titles])
             .build(),
     ];
