@@ -64,8 +64,14 @@ function updateEvent(
 ): void {
     // 1. task nameが空白
     // 2. calendar Idが空白
+    // 3. 開始時刻or終了時刻が不正
     // のとき読み飛ばす
-    if (record.event.title == '' || record.calendarId == '') {
+    if (
+        record.event.title == '' ||
+        record.calendarId == '' ||
+        record.event.start.isValid() ||
+        record.event.end.isValid()
+    ) {
         console.log('skip updating');
         return;
     }
