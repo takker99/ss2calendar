@@ -37,7 +37,7 @@ export class Calendar {
             console.log(
                 'This event could not be found. Register it as a new event...'
             );
-            const result = this.Add(eventId, newEvent, metaData);
+            const result = this.Add(newEvent, metaData);
             console.log(`New event ID: ${result}`);
             return result;
         }
