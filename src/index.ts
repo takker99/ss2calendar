@@ -69,8 +69,8 @@ function updateEvent(
     if (
         record.event.title == '' ||
         record.calendarId == '' ||
-        record.event.start.isValid() ||
-        record.event.end.isValid()
+        !record.event.start.isValid() ||
+        !record.event.end.isValid()
     ) {
         console.log('skip updating');
         return;
