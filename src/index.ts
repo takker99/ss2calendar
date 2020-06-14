@@ -62,24 +62,34 @@ function updateEvent(
     sheet: GoogleAppsScript.Spreadsheet.Sheet,
     setting: SettingInfo
 ): void {
+    console.log(`title: ${record.event.title}`);
+    console.log(`start: ${record.event.start}`);
+    console.log(`end: ${record.event.end}`);
+    console.log(`description: ${record.event.description}`);
+    console.log(`row index: ${record.row}`);
+
     // 1. task nameが空白
     // 2. calendar Idが空白
     // 3. 開始時刻or終了時刻が不正
     // のとき読み飛ばす
-    if (
-        record.event.title == '' ||
-        record.calendarId == '' ||
-        !record.event.start.isValid() ||
-        !record.event.end.isValid()
-    ) {
-        console.log('skip updating');
+    if (record.event.title == '') {
+        console.log('The title is empty. Skip updating.');
         return;
     }
-    console.log(`setting the event '${record.event.title}'...`);
-    console.log(`start: ${record.event.start}`);
-    console.log(`end: ${record.event.end}`);
-    console.log(`description: ${record.event.description}`);
-
+    if (record.calendarId == '') {
+        console.log('The Calendar ID is empty. Skip updating.');
+        return;
+    }
+    if (!record.event.start.isValid()) {
+        console.log('The start time is invalied. Skip updating.');
+        console.log(`start: ${record.event.start}`);
+        return;
+    }
+    if (!record.event.end.isValid()) {
+        console.log('The end time is invalid. Skip updating.');
+        console.log(`end: ${record.event.end}`);
+        return;
+    }
     const metaData: { [key: string]: string } = {
         spreadSheetId: sheet.getParent().getId(),
         sheetName: sheet.getSheetName(),
