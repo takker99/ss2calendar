@@ -170,9 +170,12 @@ function toRecord(
 // event をsheetに書き込む
 function writeEvent(
     record: Record,
-    sheet: GoogleAppsScript.Spreadsheet.Sheet
+    sheet: GoogleAppsScript.Spreadsheet.Sheet,
+    setting?: SettingInfo
 ): void {
-    const setting = SettingManager.load();
+    if (setting) {
+        setting = SettingManager.load();
+    }
     if (setting == undefined) {
         console.error('Failed to load settings');
         return;
