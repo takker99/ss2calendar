@@ -124,6 +124,6 @@ export function getDateFixed(
 ): moment.Moment {
     return Moment.moment
         .utc([year, month, day, hour, minute, 0, 0])
-        .subtract('month', 1)
-        .subtract('hour', 9);
+        .subtract(1, 'month')
+        .subtract(9, 'hour');
 }
