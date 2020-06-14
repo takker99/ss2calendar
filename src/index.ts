@@ -10,7 +10,7 @@ import { SettingManager } from './settingManager';
 import * as moment from 'moment';
 const Moment = { moment: moment }; // GAS対策 cf. https://qiita.com/awa2/items/d24df6abd5fd5e4ca3d9
 
-interface Record {
+export interface Record {
     event: Event;
     row?: number;
     eventId: string;
@@ -192,7 +192,7 @@ function toRecord(
 }
 
 // event をsheetに書き込む
-function writeEvent(
+export function writeEvent(
     record: Record,
     sheet: GoogleAppsScript.Spreadsheet.Sheet,
     setting?: SettingInfo
