@@ -183,7 +183,7 @@ function writeEvent(
     sheet: GoogleAppsScript.Spreadsheet.Sheet,
     setting?: SettingInfo
 ): void {
-    if (setting) {
+    if (setting == undefined) {
         setting = SettingManager.load();
     }
     if (setting == undefined) {
