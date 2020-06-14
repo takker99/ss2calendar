@@ -24,36 +24,50 @@ function getRecords(
     firstRow: number,
     setting: SettingInfo
 ): Required<Record>[] {
-    return rawRecords.map(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (rawRecord: any[], index: number): Required<Record> => {
-            return {
-                row: firstRow + index,
-                event: new Event(
-                    rawRecord[setting.record.read.title - 1],
-                    new TimeSpan(
-                        getDateFixed(
-                            rawRecord[setting.record.read.start.year - 1],
-                            rawRecord[setting.record.read.start.month - 1],
-                            rawRecord[setting.record.read.start.date - 1],
-                            rawRecord[setting.record.read.start.hour - 1],
-                            rawRecord[setting.record.read.start.minute - 1]
+    // 1. titleが空
+    // 2. calendarIdが空
+    // 3. 開始時刻が空
+    // 4. 終了時刻が空
+    // なrecordは除外する
+    return rawRecords
+        .filter(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (rawRecord: any[]): boolean =>
+                rawRecord[setting.record.read.title - 1] != '' &&
+                rawRecord[setting.record.read.calendarId - 1] != '' &&
+                rawRecord[setting.record.write.start.time - 1] != '' &&
+                rawRecord[setting.record.write.end.time - 1] != ''
+        )
+        .map(
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            (rawRecord: any[], index: number): Required<Record> => {
+                return {
+                    row: firstRow + index,
+                    event: new Event(
+                        rawRecord[setting.record.read.title - 1],
+                        new TimeSpan(
+                            getDateFixed(
+                                rawRecord[setting.record.read.start.year - 1],
+                                rawRecord[setting.record.read.start.month - 1],
+                                rawRecord[setting.record.read.start.date - 1],
+                                rawRecord[setting.record.read.start.hour - 1],
+                                rawRecord[setting.record.read.start.minute - 1]
+                            ),
+                            getDateFixed(
+                                rawRecord[setting.record.read.end.year - 1],
+                                rawRecord[setting.record.read.end.month - 1],
+                                rawRecord[setting.record.read.end.date - 1],
+                                rawRecord[setting.record.read.end.hour - 1],
+                                rawRecord[setting.record.read.end.minute - 1]
+                            )
                         ),
-                        getDateFixed(
-                            rawRecord[setting.record.read.end.year - 1],
-                            rawRecord[setting.record.read.end.month - 1],
-                            rawRecord[setting.record.read.end.date - 1],
-                            rawRecord[setting.record.read.end.hour - 1],
-                            rawRecord[setting.record.read.end.minute - 1]
-                        )
+                        rawRecord[setting.record.read.description - 1]
                     ),
-                    rawRecord[setting.record.read.description - 1]
-                ),
-                eventId: rawRecord[setting.record.read.eventId - 1],
-                calendarId: rawRecord[setting.record.read.calendarId - 1],
-            };
-        }
-    );
+                    eventId: rawRecord[setting.record.read.eventId - 1],
+                    calendarId: rawRecord[setting.record.read.calendarId - 1],
+                };
+            }
+        );
 }
 
 // eventを更新する
