@@ -31,8 +31,16 @@ export class Calendar {
         eventId: string,
         newEvent: Event,
         metaData?: { [key: string]: string }
-    ): void {
+    ): string | undefined {
         const event = this.calendar.getEventById(eventId);
+        if (event == null) {
+            console.log(
+                'This event could not be found. Register it as a new event...'
+            );
+            const result = this.Add(eventId, newEvent, metaData);
+            console.log(`New event ID: ${result}`);
+            return result;
+        }
         if (event.getTitle() != newEvent.title) event.setTitle(newEvent.title);
         if (
             event.getStartTime() != newEvent.start.toDate() &&
@@ -47,6 +55,7 @@ export class Calendar {
                     event.setTag(key, metaData[key]);
             }
         }
+        return undefined;
     }
 
     public Add(event: Event, metaData?: { [key: string]: string }): string {
