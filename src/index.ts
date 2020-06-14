@@ -136,22 +136,22 @@ function updateEvent(
     console.log(`done.`);
 }
 
-// Google Calendarから、直近一ヶ月以内で最後に更新したeventを取得する
+// Google Calendarから、前後一ヶ月以内で最後に更新したeventを取得する
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function getLastUpdatedEvent(
     calendarId: string
 ): GoogleAppsScript.Calendar.CalendarEvent | undefined {
-    const momentNow = Moment.moment().zone('+09:00');
-    const now = momentNow.toDate();
-    const aMonthAgo = momentNow.subtract(1, 'months').toDate();
+    const now = Moment.moment().zone('+09:00');
+    const aMonthAgo = now.subtract(1, 'month').toDate();
+    const aMonthAfter = now.add(2, 'month').toDate();
     console.log(
         `Getting events from ${CalendarApp.getCalendarById(
             calendarId
-        ).getName()} between ${aMonthAgo} and ${now}...`
+        ).getName()} between ${aMonthAgo} and ${aMonthAfter}...`
     );
     const events = CalendarApp.getCalendarById(calendarId).getEvents(
         aMonthAgo,
-        now
+        aMonthAfter
     );
     // このようにDateの生成を介さないで直接引数に代入すると失敗する。
     // const events = CalendarApp.getCalendarById(calendarId).getEvents(now_.subtract(1, 'months').toDate(), now_.toDate());
