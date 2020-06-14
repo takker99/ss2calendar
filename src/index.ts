@@ -90,7 +90,17 @@ function updateEvent(
     // 既に登録済みの記録であれば、更新する
     if (record.eventId != '') {
         console.log('Updating the event...');
-        recordCalendar.Modify(record.eventId, record.event, metaData);
+        const eventId = recordCalendar.Modify(
+            record.eventId,
+            record.event,
+            metaData
+        );
+        if (eventId != undefined) {
+            sheet
+                .getRange(record.row, setting.record.write.eventId)
+                .setValue(eventId);
+        }
+
         console.log(`done.`);
         return;
     }
@@ -98,7 +108,6 @@ function updateEvent(
     // event IDを新規登録する
     console.log('Registering a new event...');
     const eventId = recordCalendar.Add(record.event, metaData);
-    console.log(`event ID: ${eventId}`);
     sheet.getRange(record.row, setting.record.write.eventId).setValue(eventId);
     console.log(`done.`);
 }
