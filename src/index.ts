@@ -294,8 +294,8 @@ export function writeEvent(
                     sheet.getLastRow() - setting.record.firstLine + 1,
                     1
                 )
-                .getValues()[0] as string[]).findIndex(
-                (value) => value == record.eventId
+                .getValues() as string[][]).findIndex(
+                (value) => value[0] == record.eventId
             );
             // 行が存在したらそこに書き込む
             if (result > 0) {
@@ -350,6 +350,8 @@ function writeSpreadSheet(e: GoogleCalendarEventObject): void {
     console.log(`End with ${changedRecord.event.end.toISOString()}`);
     console.log(`Event Id:  ${changedRecord.eventId}`);
 
+    // 並び替えを実行している可能性があるので、rowの値は信用できない。
+    delete changedRecord.row;
     // sheetに書き込む
     writeEvent(changedRecord, sheet);
 
