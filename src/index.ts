@@ -282,10 +282,9 @@ export function writeEvent(
         range.clearDataValidations();
         range.setDataValidations([rules]);
     } else {
-        console.log(
-            'Row index is unknown. Search event IDs for the row index.'
-        );
+        console.log('Row index is unknown.');
         if (record.eventId != '') {
+            console.log('Search event IDs for the row index.');
             // event IDから変更を適用する行を検索する
             const result = (sheet
                 .getRange(
@@ -303,6 +302,7 @@ export function writeEvent(
                 record.row = result + setting.record.firstLine;
                 return writeEvent(record, sheet);
             }
+            console.log('Not found.');
         }
         // 新しい行を追加
         console.log('Create new line and write this record');
