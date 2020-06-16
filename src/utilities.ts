@@ -31,42 +31,42 @@ function updateConditionalFormat(): void {
     const rules = [
         SpreadsheetApp.newConditionalFormatRule()
             .whenFormulaSatisfied(
-                `=hour(timevalue($I${settings.record.firstLine}))*60+minute(timevalue($I${settings.record.firstLine}))<4*60`
+                `=hour(timevalue($G${settings.record.firstLine}))*60+minute(timevalue($G${settings.record.firstLine}))<4*60`
             )
             .setBackground('#57bb8a')
             .setRanges([titles])
             .build(),
         SpreadsheetApp.newConditionalFormatRule()
             .whenFormulaSatisfied(
-                `=hour(timevalue($I${settings.record.firstLine}))*60+minute(timevalue($I${settings.record.firstLine}))<8*60`
+                `=hour(timevalue($G${settings.record.firstLine}))*60+minute(timevalue($G${settings.record.firstLine}))<8*60`
             )
             .setBackground('#b7e1cd')
             .setRanges([titles])
             .build(),
         SpreadsheetApp.newConditionalFormatRule()
             .whenFormulaSatisfied(
-                `=hour(timevalue($I${settings.record.firstLine}))*60+minute(timevalue($I${settings.record.firstLine}))<12*60`
+                `=hour(timevalue($G${settings.record.firstLine}))*60+minute(timevalue($G${settings.record.firstLine}))<12*60`
             )
             .setBackground('#ffd666')
             .setRanges([titles])
             .build(),
         SpreadsheetApp.newConditionalFormatRule()
             .whenFormulaSatisfied(
-                `=hour(timevalue($I${settings.record.firstLine}))*60+minute(timevalue($I${settings.record.firstLine}))<16*60`
+                `=hour(timevalue($G${settings.record.firstLine}))*60+minute(timevalue($G${settings.record.firstLine}))<16*60`
             )
             .setBackground('#f7981d')
             .setRanges([titles])
             .build(),
         SpreadsheetApp.newConditionalFormatRule()
             .whenFormulaSatisfied(
-                `=hour(timevalue($I${settings.record.firstLine}))*60+minute(timevalue($I${settings.record.firstLine}))<20*60`
+                `=hour(timevalue($G${settings.record.firstLine}))*60+minute(timevalue($G${settings.record.firstLine}))<20*60`
             )
             .setBackground('#e67c13')
             .setRanges([titles])
             .build(),
         SpreadsheetApp.newConditionalFormatRule()
             .whenFormulaSatisfied(
-                `=hour(timevalue($I${settings.record.firstLine}))*60+minute(timevalue($I${settings.record.firstLine}))<24*60`
+                `=hour(timevalue($G${settings.record.firstLine}))*60+minute(timevalue($G${settings.record.firstLine}))<24*60`
             )
             .setBackground('#351c75')
             .setFontColor('#FFFFFF')
@@ -92,7 +92,7 @@ function sortRecord(): void {
     console.log(`settings: ${JSON.stringify(settings)}`);
 
     // 並び替える
-    sheet.sort(settings.record.columnEnd + 1);
+    sheet.sort(settings.record.read.start);
 }
 
 // 新しい記録dataを追加する

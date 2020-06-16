@@ -5,8 +5,13 @@ export class SettingInfo {
         // 転置に使うlambda expression
         const transpose = <T>(a: T[][]): T[][] =>
             a[0].map((_, c) => a.map((r) => r[c]));
+
+        // 設定情報が含まれたセルの行数
+        const settingRowLength = 28;
         const temp = transpose(
-            settingSheet.getRange(1, 2, 39, 1).getValues() as number[][]
+            settingSheet
+                .getRange(1, 2, settingRowLength, 1)
+                .getValues() as number[][]
         )[0];
 
         this.isSync = temp[0] == 1 ? true : false;
@@ -22,38 +27,21 @@ export class SettingInfo {
                     date: temp[13],
                     time: temp[14],
                 },
-                end: {
-                    year: temp[15],
-                    month: temp[16],
-                    date: temp[17],
-                    time: temp[18],
-                },
-                title: temp[19],
-                expectation: temp[20],
-                actualAction: temp[21],
-                emotionTag: temp[22],
-                remarks: temp[23],
-                eventId: temp[24],
+                duration: temp[15],
+                title: temp[16],
+                expectation: temp[17],
+                actualAction: temp[18],
+                emotionTag: temp[19],
+                remarks: temp[20],
+                eventId: temp[21],
             },
             read: {
-                start: {
-                    year: temp[25],
-                    month: temp[26],
-                    date: temp[27],
-                    hour: temp[28],
-                    minute: temp[29],
-                },
-                end: {
-                    year: temp[30],
-                    month: temp[31],
-                    date: temp[32],
-                    hour: temp[33],
-                    minute: temp[34],
-                },
-                title: temp[35],
-                description: temp[36],
-                eventId: temp[37],
-                calendarId: temp[38],
+                start: temp[22],
+                end: temp[23],
+                title: temp[24],
+                description: temp[25],
+                eventId: temp[26],
+                calendarId: temp[27],
             },
         };
 
@@ -100,7 +88,7 @@ export class SettingInfo {
         write: {
             tag: number;
             start: { year: number; month: number; date: number; time: number };
-            end: { year: number; month: number; date: number; time: number };
+            duration: number;
             title: number;
             expectation: number;
             actualAction: number;
@@ -109,20 +97,8 @@ export class SettingInfo {
             eventId: number;
         };
         read: {
-            start: {
-                year: number;
-                month: number;
-                date: number;
-                hour: number;
-                minute: number;
-            };
-            end: {
-                year: number;
-                month: number;
-                date: number;
-                hour: number;
-                minute: number;
-            };
+            start: number;
+            end: number;
             title: number;
             description: number;
             eventId: number;
@@ -155,10 +131,7 @@ export function writingAreaLength(setting: SettingInfo): number {
         setting.record.write.start.month,
         setting.record.write.start.date,
         setting.record.write.start.time,
-        setting.record.write.end.year,
-        setting.record.write.end.month,
-        setting.record.write.end.date,
-        setting.record.write.end.time,
+        setting.record.write.duration,
         setting.record.write.title,
         setting.record.write.expectation,
         setting.record.write.actualAction,
