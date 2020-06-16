@@ -18,6 +18,10 @@ export class TimeSpan {
         return Moment.moment(this._end);
     }
 
+    public get duration(): moment.Duration {
+        return Moment.moment.duration(this._end.diff(this._start));
+    }
+
     private _start: moment.Moment;
     private _end: moment.Moment;
 }
@@ -115,15 +119,6 @@ export class Event {
     private readonly _description: string;
 }
 
-export function getDateFixed(
-    year: number,
-    month: number,
-    day: number,
-    hour: number,
-    minute: number
-): moment.Moment {
-    return Moment.moment
-        .utc([year, month, day, hour, minute, 0, 0])
-        .subtract(1, 'month')
-        .subtract(9, 'hour');
+export function getDateFixed(unixSecond: number): moment.Moment {
+    return Moment.moment.unix(unixSecond).subtract(9, 'hour');
 }

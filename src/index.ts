@@ -1,4 +1,4 @@
-import { Calendar, Event, getDateFixed, TimeSpan } from './calendar';
+import { Calendar, Event, TimeSpan, getDateFixed } from './calendar';
 import { OnEditEventObject, GoogleCalendarEventObject } from './EventObject';
 import {
     SettingInfo,
@@ -27,7 +27,7 @@ function getRecords(
     // 1. titleが空
     // 2. calendarIdが空
     // 3. 開始時刻が空
-    // 4. 終了時刻が空
+    // 4. 経過時刻が空
     // なrecordは除外する
     return rawRecords
         .filter(
@@ -35,8 +35,11 @@ function getRecords(
             (rawRecord: any[]): boolean =>
                 rawRecord[setting.record.read.title - 1] != '' &&
                 rawRecord[setting.record.read.calendarId - 1] != '' &&
+                rawRecord[setting.record.write.start.year - 1] != '' &&
+                rawRecord[setting.record.write.start.month - 1] != '' &&
+                rawRecord[setting.record.write.start.date - 1] != '' &&
                 rawRecord[setting.record.write.start.time - 1] != '' &&
-                rawRecord[setting.record.write.end.time - 1] != ''
+                rawRecord[setting.record.write.duration - 1] != ''
         )
         .map(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -44,21 +47,15 @@ function getRecords(
                 return {
                     row: firstRow + index,
                     event: new Event(
-                        rawRecord[setting.record.read.title - 1],
+                        rawRecord[setting.record.read.title - 1] as string,
                         new TimeSpan(
                             getDateFixed(
-                                rawRecord[setting.record.read.start.year - 1],
-                                rawRecord[setting.record.read.start.month - 1],
-                                rawRecord[setting.record.read.start.date - 1],
-                                rawRecord[setting.record.read.start.hour - 1],
-                                rawRecord[setting.record.read.start.minute - 1]
+                                rawRecord[
+                                    setting.record.read.start - 1
+                                ] as number
                             ),
                             getDateFixed(
-                                rawRecord[setting.record.read.end.year - 1],
-                                rawRecord[setting.record.read.end.month - 1],
-                                rawRecord[setting.record.read.end.date - 1],
-                                rawRecord[setting.record.read.end.hour - 1],
-                                rawRecord[setting.record.read.end.minute - 1]
+                                rawRecord[setting.record.read.end - 1] as number
                             )
                         ),
                         rawRecord[setting.record.read.description - 1]
@@ -174,14 +171,14 @@ function toRecord(
         day: event.getStartTime().getDate(),
         hours: event.getStartTime().getHours(),
         minutes: event.getStartTime().getMinutes(),
-    });
+    }).zone('+09:00');
     const endTime = Moment.moment({
         years: event.getEndTime().getFullYear(),
         months: event.getEndTime().getMonth(),
         day: event.getEndTime().getDate(),
         hours: event.getEndTime().getHours(),
         minutes: event.getEndTime().getMinutes(),
-    });
+    }).zone('+09:00');
     const timeSpan = new TimeSpan(startTime, endTime);
     return {
         event: new Event(event.getTitle(), timeSpan, event.getDescription()),
@@ -232,10 +229,10 @@ export function writeEvent(
             record.event.start.month() + 1;
         temp[setting.record.write.start.date - 1] = record.event.start.date();
         temp[setting.record.write.start.time - 1] = getHHMM(record.event.start);
-        temp[setting.record.write.end.year - 1] = record.event.end.year();
-        temp[setting.record.write.end.month - 1] = record.event.end.month() + 1;
-        temp[setting.record.write.end.date - 1] = record.event.end.date();
-        temp[setting.record.write.end.time - 1] = getHHMM(record.event.end);
+        const duration = record.event.period.duration;
+        temp[
+            setting.record.write.duration - 1
+        ] = `${duration.hours()}:${duration.minutes()}`;
         temp[setting.record.write.title - 1] = record.event.title;
         temp[setting.record.write.eventId - 1] = record.eventId;
 
