@@ -230,9 +230,10 @@ export function writeEvent(
         temp[setting.record.write.start.date - 1] = record.event.start.date();
         temp[setting.record.write.start.time - 1] = getHHMM(record.event.start);
         const duration = record.event.period.duration;
-        temp[
-            setting.record.write.duration - 1
-        ] = `${duration.hours()}:${duration.minutes()}`;
+        const zero = (n: number): string => String(n).padStart(2, '0');
+        temp[setting.record.write.duration - 1] = `${zero(
+            duration.hours()
+        )}:${zero(duration.minutes())}`;
         temp[setting.record.write.title - 1] = record.event.title;
         temp[setting.record.write.eventId - 1] = record.eventId;
 
