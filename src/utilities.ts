@@ -84,28 +84,3 @@ function sortRecord(): void {
     // 並び替える
     sheet.sort(settings.record.read.start);
 }
-
-// 新しい記録dataを追加する
-// 終了時刻は開始時刻と同じにする
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function addRecord(): void {
-    const sheet = SpreadsheetApp.getActiveSheet();
-    if (sheet == null) {
-        console.error("the target sheet doesn't exist.");
-        return;
-    }
-
-    // 記録dataを作成する
-    const now = Moment.moment().zone('+09:00');
-    console.log(`現在時刻: ${now}`);
-    const event = new Event('', new TimeSpan(now, now), '');
-    const newRecord: Record = {
-        row: 0,
-        event: event,
-        eventId: '',
-        calendarId: '',
-    };
-
-    // 記録dataを書き込む
-    writeEvent(newRecord, sheet);
-}
