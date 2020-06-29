@@ -9,7 +9,7 @@ export class SettingInfo {
             );
 
         // 設定情報が含まれたセルの行数
-        const settingRowLength = 28;
+        const settingRowLength = 38;
         const temp = transpose(
             settingSheet
                 .getRange(1, 2, settingRowLength, 1)
@@ -22,28 +22,52 @@ export class SettingInfo {
             columnFlont: temp[8],
             columnEnd: temp[9],
             write: {
-                tag: temp[10],
-                start: {
-                    year: temp[11],
-                    month: temp[12],
-                    date: temp[13],
-                    time: temp[14],
+                schedule: {
+                    tag: temp[10],
+                    start: {
+                        year: temp[11],
+                        month: temp[12],
+                        date: temp[13],
+                        time: temp[14],
+                    },
+                    duration: temp[15],
+                    title: temp[16],
+                    description: temp[18],
+                    eventId: temp[24],
                 },
-                duration: temp[15],
-                title: temp[16],
-                expectation: temp[17],
-                actualAction: temp[18],
-                emotionTag: temp[19],
-                remarks: temp[20],
-                eventId: temp[21],
+                record: {
+                    start: {
+                        year: temp[11],
+                        month: temp[12],
+                        date: temp[13],
+                        time: temp[19],
+                    },
+                    duration: temp[20],
+                    title: temp[16],
+                    description: temp[21],
+                    emotion: temp[22],
+                    remarks: temp[23],
+                    eventId: temp[25],
+                },
             },
             read: {
-                start: temp[22],
-                end: temp[23],
-                title: temp[24],
-                description: temp[25],
-                eventId: temp[26],
-                calendarId: temp[27],
+                schedule: {
+                    canUpdate: temp[26],
+                    start: temp[28],
+                    end: temp[29],
+                    title: temp[32],
+                    description: temp[33],
+                    eventId: temp[34],
+                    calendarId: temp[35],
+                },
+                record: {
+                    canUpdate: temp[27],
+                    start: temp[30],
+                    end: temp[31],
+                    title: temp[32],
+                    description: temp[36],
+                    eventId: temp[37],
+                },
             },
         };
 
@@ -88,23 +112,52 @@ export class SettingInfo {
         columnFlont: number;
         columnEnd: number;
         write: {
-            tag: number;
-            start: { year: number; month: number; date: number; time: number };
-            duration: number;
-            title: number;
-            expectation: number;
-            actualAction: number;
-            emotionTag: number;
-            remarks: number;
-            eventId: number;
+            schedule: {
+                tag: number;
+                start: {
+                    year: number;
+                    month: number;
+                    date: number;
+                    time: number;
+                };
+                duration: number;
+                title: number;
+                description: number;
+                eventId: number;
+            };
+            record: {
+                start: {
+                    year: number;
+                    month: number;
+                    date: number;
+                    time: number;
+                };
+                duration: number;
+                title: number;
+                description: number;
+                emotion: number;
+                remarks: number;
+                eventId: number;
+            };
         };
         read: {
-            start: number;
-            end: number;
-            title: number;
-            description: number;
-            eventId: number;
-            calendarId: number;
+            schedule: {
+                canUpdate: number;
+                start: number;
+                end: number;
+                title: number;
+                description: number;
+                eventId: number;
+                calendarId: number;
+            };
+            record: {
+                canUpdate: number;
+                start: number;
+                end: number;
+                title: number;
+                description: number;
+                eventId: number;
+            };
         };
     };
     public readonly emotionList: GoogleAppsScript.Spreadsheet.Range;
@@ -126,20 +179,8 @@ export function recordLength(setting: SettingInfo): number {
     return setting.record.columnEnd - setting.record.columnFlont + 1;
 }
 
+// 記録/予定に使用しているsheetの列幅を返す
 export function writingAreaLength(setting: SettingInfo): number {
-    const temp = [
-        setting.record.write.tag,
-        setting.record.write.start.year,
-        setting.record.write.start.month,
-        setting.record.write.start.date,
-        setting.record.write.start.time,
-        setting.record.write.duration,
-        setting.record.write.title,
-        setting.record.write.expectation,
-        setting.record.write.actualAction,
-        setting.record.write.emotionTag,
-        setting.record.write.remarks,
-        setting.record.write.eventId,
-    ];
-    return Math.max(...temp) - Math.min(...temp) + 1;
+    // 実装方法が思いつかないので、その場しのぎの方法を使う
+    return 38;
 }

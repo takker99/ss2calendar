@@ -1,8 +1,4 @@
 import { SettingManager } from './settingManager';
-import { Event, TimeSpan } from './calendar';
-import { writeEvent, Record } from './index';
-import * as moment from 'moment';
-const Moment = { moment: moment }; // GAS対策 cf. https://qiita.com/awa2/items/d24df6abd5fd5e4ca3d9
 
 // actionを実行した時間帯に応じて、action nameの色を変える
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -18,7 +14,7 @@ function updateConditionalFormat(): void {
 
     const titles = sheet.getRange(
         settings.record.firstLine,
-        settings.record.write.title,
+        settings.record.write.schedule.title,
         sheet.getLastRow(),
         1
     );
@@ -82,5 +78,5 @@ function sortRecord(): void {
     if (settings == undefined) return;
 
     // 並び替える
-    sheet.sort(settings.record.read.start);
+    sheet.sort(settings.record.read.schedule.start);
 }
