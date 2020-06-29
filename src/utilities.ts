@@ -29,41 +29,35 @@ function updateConditionalFormat(): void {
     //   各task終了時間に応じてtaskの色分けをする
     sheet.clearConditionalFormatRules();
     const rules = [
+        [
+            `=hour(timevalue($G${settings.record.firstLine}))*60+minute(timevalue($G${settings.record.firstLine}))<4*60`,
+            '#57bb8a',
+        ],
+        [
+            `=hour(timevalue($G${settings.record.firstLine}))*60+minute(timevalue($G${settings.record.firstLine}))<8*60`,
+            '#b7e1cd',
+        ],
+        [
+            `=hour(timevalue($G${settings.record.firstLine}))*60+minute(timevalue($G${settings.record.firstLine}))<12*60`,
+            '#ffd666',
+        ],
+        [
+            `=hour(timevalue($G${settings.record.firstLine}))*60+minute(timevalue($G${settings.record.firstLine}))<16*60`,
+            '#f7981d',
+        ],
+        [
+            `=hour(timevalue($G${settings.record.firstLine}))*60+minute(timevalue($G${settings.record.firstLine}))<20*60`,
+            '#e67c13',
+        ],
+    ].map((values: string[]) =>
         SpreadsheetApp.newConditionalFormatRule()
-            .whenFormulaSatisfied(
-                `=hour(timevalue($G${settings.record.firstLine}))*60+minute(timevalue($G${settings.record.firstLine}))<4*60`
-            )
-            .setBackground('#57bb8a')
+            .whenFormulaSatisfied(values[0])
+            .setBackground(values[1])
             .setRanges([titles])
-            .build(),
-        SpreadsheetApp.newConditionalFormatRule()
-            .whenFormulaSatisfied(
-                `=hour(timevalue($G${settings.record.firstLine}))*60+minute(timevalue($G${settings.record.firstLine}))<8*60`
-            )
-            .setBackground('#b7e1cd')
-            .setRanges([titles])
-            .build(),
-        SpreadsheetApp.newConditionalFormatRule()
-            .whenFormulaSatisfied(
-                `=hour(timevalue($G${settings.record.firstLine}))*60+minute(timevalue($G${settings.record.firstLine}))<12*60`
-            )
-            .setBackground('#ffd666')
-            .setRanges([titles])
-            .build(),
-        SpreadsheetApp.newConditionalFormatRule()
-            .whenFormulaSatisfied(
-                `=hour(timevalue($G${settings.record.firstLine}))*60+minute(timevalue($G${settings.record.firstLine}))<16*60`
-            )
-            .setBackground('#f7981d')
-            .setRanges([titles])
-            .build(),
-        SpreadsheetApp.newConditionalFormatRule()
-            .whenFormulaSatisfied(
-                `=hour(timevalue($G${settings.record.firstLine}))*60+minute(timevalue($G${settings.record.firstLine}))<20*60`
-            )
-            .setBackground('#e67c13')
-            .setRanges([titles])
-            .build(),
+            .build()
+    );
+    // 文字色も変更するので、別に加える
+    rules.push(
         SpreadsheetApp.newConditionalFormatRule()
             .whenFormulaSatisfied(
                 `=hour(timevalue($G${settings.record.firstLine}))*60+minute(timevalue($G${settings.record.firstLine}))<24*60`
@@ -71,8 +65,8 @@ function updateConditionalFormat(): void {
             .setBackground('#351c75')
             .setFontColor('#FFFFFF')
             .setRanges([titles])
-            .build(),
-    ];
+            .build()
+    );
     sheet.setConditionalFormatRules(rules);
 }
 
