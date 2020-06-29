@@ -15,8 +15,6 @@ function updateConditionalFormat(): void {
 
     const settings = SettingManager.load();
     if (settings == undefined) return;
-    console.log('Got the setting information');
-    console.log(`settings: ${JSON.stringify(settings)}`);
 
     const titles = sheet.getRange(
         settings.record.firstLine,
@@ -82,8 +80,6 @@ function sortRecord(): void {
 
     const settings = SettingManager.load();
     if (settings == undefined) return;
-    console.log('Got the setting information');
-    console.log(`settings: ${JSON.stringify(settings)}`);
 
     // 並び替える
     sheet.sort(settings.record.read.start);
