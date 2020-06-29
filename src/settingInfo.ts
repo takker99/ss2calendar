@@ -4,7 +4,9 @@ export class SettingInfo {
     constructor(settingSheet: GoogleAppsScript.Spreadsheet.Sheet) {
         // 転置に使うlambda expression
         const transpose = <T>(a: T[][]): T[][] =>
-            a[0].map((_, c) => a.map((r) => r[c]));
+            a[0].map((_: T, index: number): T[] =>
+                a.map((r: T[]): T => r[index])
+            );
 
         // 設定情報が含まれたセルの行数
         const settingRowLength = 28;
