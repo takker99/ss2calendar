@@ -15,8 +15,6 @@ function updateConditionalFormat(): void {
 
     const settings = SettingManager.load();
     if (settings == undefined) return;
-    console.log('Got the setting information');
-    console.log(`settings: ${JSON.stringify(settings)}`);
 
     const titles = sheet.getRange(
         settings.record.firstLine,
@@ -29,41 +27,35 @@ function updateConditionalFormat(): void {
     //   各task終了時間に応じてtaskの色分けをする
     sheet.clearConditionalFormatRules();
     const rules = [
+        [
+            `=hour(timevalue($G${settings.record.firstLine}))*60+minute(timevalue($G${settings.record.firstLine}))<4*60`,
+            '#57bb8a',
+        ],
+        [
+            `=hour(timevalue($G${settings.record.firstLine}))*60+minute(timevalue($G${settings.record.firstLine}))<8*60`,
+            '#b7e1cd',
+        ],
+        [
+            `=hour(timevalue($G${settings.record.firstLine}))*60+minute(timevalue($G${settings.record.firstLine}))<12*60`,
+            '#ffd666',
+        ],
+        [
+            `=hour(timevalue($G${settings.record.firstLine}))*60+minute(timevalue($G${settings.record.firstLine}))<16*60`,
+            '#f7981d',
+        ],
+        [
+            `=hour(timevalue($G${settings.record.firstLine}))*60+minute(timevalue($G${settings.record.firstLine}))<20*60`,
+            '#e67c13',
+        ],
+    ].map((values: string[]) =>
         SpreadsheetApp.newConditionalFormatRule()
-            .whenFormulaSatisfied(
-                `=hour(timevalue($G${settings.record.firstLine}))*60+minute(timevalue($G${settings.record.firstLine}))<4*60`
-            )
-            .setBackground('#57bb8a')
+            .whenFormulaSatisfied(values[0])
+            .setBackground(values[1])
             .setRanges([titles])
-            .build(),
-        SpreadsheetApp.newConditionalFormatRule()
-            .whenFormulaSatisfied(
-                `=hour(timevalue($G${settings.record.firstLine}))*60+minute(timevalue($G${settings.record.firstLine}))<8*60`
-            )
-            .setBackground('#b7e1cd')
-            .setRanges([titles])
-            .build(),
-        SpreadsheetApp.newConditionalFormatRule()
-            .whenFormulaSatisfied(
-                `=hour(timevalue($G${settings.record.firstLine}))*60+minute(timevalue($G${settings.record.firstLine}))<12*60`
-            )
-            .setBackground('#ffd666')
-            .setRanges([titles])
-            .build(),
-        SpreadsheetApp.newConditionalFormatRule()
-            .whenFormulaSatisfied(
-                `=hour(timevalue($G${settings.record.firstLine}))*60+minute(timevalue($G${settings.record.firstLine}))<16*60`
-            )
-            .setBackground('#f7981d')
-            .setRanges([titles])
-            .build(),
-        SpreadsheetApp.newConditionalFormatRule()
-            .whenFormulaSatisfied(
-                `=hour(timevalue($G${settings.record.firstLine}))*60+minute(timevalue($G${settings.record.firstLine}))<20*60`
-            )
-            .setBackground('#e67c13')
-            .setRanges([titles])
-            .build(),
+            .build()
+    );
+    // 文字色も変更するので、別に加える
+    rules.push(
         SpreadsheetApp.newConditionalFormatRule()
             .whenFormulaSatisfied(
                 `=hour(timevalue($G${settings.record.firstLine}))*60+minute(timevalue($G${settings.record.firstLine}))<24*60`
@@ -71,8 +63,8 @@ function updateConditionalFormat(): void {
             .setBackground('#351c75')
             .setFontColor('#FFFFFF')
             .setRanges([titles])
-            .build(),
-    ];
+            .build()
+    );
     sheet.setConditionalFormatRules(rules);
 }
 
@@ -88,34 +80,7 @@ function sortRecord(): void {
 
     const settings = SettingManager.load();
     if (settings == undefined) return;
-    console.log('Got the setting information');
-    console.log(`settings: ${JSON.stringify(settings)}`);
 
     // 並び替える
     sheet.sort(settings.record.read.start);
-}
-
-// 新しい記録dataを追加する
-// 終了時刻は開始時刻と同じにする
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function addRecord(): void {
-    const sheet = SpreadsheetApp.getActiveSheet();
-    if (sheet == null) {
-        console.error("the target sheet doesn't exist.");
-        return;
-    }
-
-    // 記録dataを作成する
-    const now = Moment.moment().zone('+09:00');
-    console.log(`現在時刻: ${now}`);
-    const event = new Event('', new TimeSpan(now, now), '');
-    const newRecord: Record = {
-        row: 0,
-        event: event,
-        eventId: '',
-        calendarId: '',
-    };
-
-    // 記録dataを書き込む
-    writeEvent(newRecord, sheet);
 }

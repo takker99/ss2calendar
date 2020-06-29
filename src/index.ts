@@ -197,10 +197,7 @@ export function writeEvent(
     if (setting == undefined) {
         setting = SettingManager.load();
     }
-    if (setting == undefined) {
-        console.error('Failed to load settings');
-        return;
-    }
+    if (setting == undefined) return;
 
     if (record.row) {
         console.log('Start updating the sheet');
@@ -418,8 +415,6 @@ function writeCalendar(e: OnEditEventObject): void {
 
     const settings = SettingManager.load();
     if (settings == undefined) return;
-    /* console.log('Got the setting information'); */
-    /* console.log(`settings: ${JSON.stringify(settings)}`); */
 
     if (!settings.isSync) {
         // calendar用のsheetでなければ何もしない

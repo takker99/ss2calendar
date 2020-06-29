@@ -16,6 +16,9 @@ export class SettingManager {
             console.error("the setting sheet doesn't exist.");
             return undefined;
         }
-        return new SettingInfo(settingSheet);
+        const settings = new SettingInfo(settingSheet);
+        console.log('Got the setting information');
+        console.log(`settings: ${JSON.stringify(settings)}`);
+        return settings;
     }
 }
