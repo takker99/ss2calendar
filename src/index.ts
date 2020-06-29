@@ -285,6 +285,32 @@ export function writeEvent(
     }
 }
 
+export function updateEventFromSheet(
+    row: number,
+    length: number,
+    sheet: GoogleAppsScript.Spreadsheet.Sheet,
+    setting: SettingInfo
+): void {
+    const rawRecords = sheet
+        .getRange(
+            row,
+            setting.record.columnFlont,
+            length,
+            recordLength(setting)
+        )
+        .getValues();
+
+    // sheetから記録を入手
+    const records = getRecords(rawRecords, row, setting);
+    if (!records) return;
+    console.log(`${records.length} records is going to be updated`);
+
+    // 書き込み
+    for (const record of records) {
+        updateEvent(record, sheet, setting);
+    }
+}
+
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 function writeSpreadSheet(e: GoogleCalendarEventObject): void {
     const {
@@ -341,32 +367,21 @@ function _writeCalendar(
         console.log('No record is changed.');
         return;
     }
-
     // 変更されたrecordを含む範囲を取得する
     const fixedRowIndex = Math.max(
         setting.record.firstLine,
         changedRange.getRow()
     );
-    const rawRecords = sheet
-        .getRange(
-            fixedRowIndex,
-            setting.record.columnFlont,
-            Math.min(sheet.getLastRow(), changedRange.getLastRow()) -
-                fixedRowIndex +
-                1,
-            recordLength(setting)
-        )
-        .getValues();
 
-    // sheetから記録を入手
-    const records = getRecords(rawRecords, fixedRowIndex, setting);
-    if (!records) return;
-    console.log(`${records.length} records is going to be updated`);
-
-    // 書き込み
-    for (const record of records) {
-        updateEvent(record, sheet, setting);
-    }
+    // 更新する
+    updateEventFromSheet(
+        fixedRowIndex,
+        Math.min(sheet.getLastRow(), changedRange.getLastRow()) -
+            fixedRowIndex +
+            1,
+        sheet,
+        setting
+    );
 }
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
