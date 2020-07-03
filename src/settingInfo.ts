@@ -180,6 +180,7 @@ export function recordLength(setting: SettingInfo): number {
 }
 
 // 記録/予定に使用しているsheetの列幅を返す
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function writingAreaLength(setting: SettingInfo): number {
     // 実装方法が思いつかないので、その場しのぎの方法を使う
     return 38;
