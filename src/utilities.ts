@@ -106,6 +106,14 @@ function writeTimestamp(): void {
     // 複数行選択されているときは、最初の行に書き込む
     const targetRow = selectedRange.getRow();
 
+    // 既に値が書き込まれていたら何もしない
+    if (
+        sheet
+            .getRange(targetRow, settings.record.write.record.duration, 1, 1)
+            .getValue() != ''
+    )
+        return;
+
     // 作業開始時刻を取得
     const startDateTime = Moment.moment
         .unix(
