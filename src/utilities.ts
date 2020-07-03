@@ -106,6 +106,14 @@ function writeTimestamp(): void {
     // 複数行選択されているときは、最初の行に書き込む
     const targetRow = selectedRange.getRow();
 
+    // 既に値が書き込まれていたら何もしない
+    if (
+        sheet
+            .getRange(targetRow, settings.record.write.record.duration, 1, 1)
+            .getValue() != ''
+    )
+        return;
+
     // 作業開始時刻を取得
     const startDateTime = Moment.moment
         .unix(
@@ -129,4 +137,87 @@ function writeTimestamp(): void {
         .setValue(Utilities.formatDate(nowDate, 'JST', 'HH:mm'));
     //Calendarに更新を反映する
     updateEventFromSheet(targetRow, 2, sheet, settings);
+}
+
+// 選択中の全ての行の開始時刻を一括してずらす
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function changeTimes(): void {
+    const sheet = SpreadsheetApp.getActiveSheet();
+    if (sheet == null) {
+        console.error("the target sheet doesn't exist.");
+        return;
+    }
+
+    const settings = SettingManager.load();
+    if (!settings) return;
+
+    // 選択範囲を取得
+    const selectedRange = sheet.getActiveRange();
+    if (!selectedRange) return; // 選択されてなければ何もしない
+
+    // ずらす時間幅をuserに聞く(単位はmin)
+    const ui = SpreadsheetApp.getUi();
+    const response = ui.prompt(
+        'Offset',
+        'Please write duration by minutes',
+        ui.ButtonSet.OK_CANCEL
+    );
+
+    // 1. OK button以外が押された
+    // 2. 入力された値が数値でない
+    // 3. 何も入力されなかった
+    // ときは何もしない
+    if (
+        response.getSelectedButton() != ui.Button.OK ||
+        isNaN(Number(response.getResponseText())) ||
+        response.getResponseText() == ''
+    )
+        return;
+
+    // 予定開始時刻が記入されているセルを取得
+    const targetRangeLength =
+        selectedRange.getLastRow() - selectedRange.getRow() + 1;
+    // 転置に使うlambda expression
+    const transpose = <T>(a: T[][]): T[][] =>
+        a[0].map((_: T, index: number): T[] => a.map((r: T[]): T => r[index]));
+    // 変更する予定開始時刻を全て取得し、指定された時間(分単位)だけずらす
+    const startDateTimes = transpose(
+        sheet
+            .getRange(
+                selectedRange.getRow(),
+                settings.record.read.schedule.start,
+                targetRangeLength,
+                1
+            )
+            .getValues() as number[][]
+    )[0].map((value) =>
+        Moment.moment
+            .unix(value)
+            .subtract(9, 'hour')
+            .add(Number(response.getResponseText()), 'minute')
+            .toDate()
+    );
+
+    //予定開始時刻を更新する
+    sheet
+        .getRange(
+            selectedRange.getRow(),
+            settings.record.write.schedule.start.time,
+            targetRangeLength,
+            1
+        )
+        .setValues(
+            transpose([
+                startDateTimes.map((date) =>
+                    Utilities.formatDate(date, 'JST', 'HH:mm')
+                ),
+            ])
+        );
+    //Calendarに更新を反映する
+    updateEventFromSheet(
+        selectedRange.getRow(),
+        targetRangeLength,
+        sheet,
+        settings
+    );
 }
