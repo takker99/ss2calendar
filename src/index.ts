@@ -357,6 +357,23 @@ function _writeCalendar(
     changedRange: GoogleAppsScript.Spreadsheet.Range,
     setting: SettingInfo
 ): void {
+    // 同期対象でないsheetの場合は何もしない
+    if (
+        !(sheet
+            .getRange(
+                setting.record.isSync.row,
+                setting.record.isSync.column,
+                1,
+                1
+            )
+            .getValue() as boolean)
+    ) {
+        console.log(
+            `synchronization of sheet '${sheet.getName()}' is not available.`
+        );
+        return;
+    }
+
     // 変更範囲にどのrecordも含まれていなければ何もしない
     if (
         setting.record.columnFlont > changedRange.getLastColumn() ||

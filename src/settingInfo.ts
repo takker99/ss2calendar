@@ -9,7 +9,7 @@ export class SettingInfo {
             );
 
         // 設定情報が含まれたセルの行数
-        const settingRowLength = 38;
+        const settingRowLength = 40;
         const temp = transpose(
             settingSheet
                 .getRange(1, 2, settingRowLength, 1)
@@ -18,6 +18,10 @@ export class SettingInfo {
 
         this.isSync = temp[0] == 1 ? true : false;
         this.record = {
+            isSync: {
+                row: temp[38],
+                column: temp[39],
+            },
             firstLine: temp[7],
             columnFlont: temp[8],
             columnEnd: temp[9],
@@ -108,6 +112,7 @@ export class SettingInfo {
     // true: 同期が有効 false:同期を停止
     public readonly isSync: boolean;
     public readonly record: {
+        isSync: { row: number; column: number }; // sheet毎の同期設定
         firstLine: number;
         columnFlont: number;
         columnEnd: number;
