@@ -391,12 +391,12 @@ function writeCalendar(e: OnEditEventObject): void {
     /*     return; */
     /* } */
 
-    const sheet = SpreadsheetApp.getActiveSheet();
+    const sheet = e.source.getActiveSheet();
     if (!sheet) {
         console.error("the target sheet doesn't exist.");
         return;
     }
-    console.log(`the current sheet: ${e.source.getActiveSheet().getName()}`);
+    console.log(`the current sheet: ${sheet.getName()}`);
 
     const settings = SettingManager.load();
     if (!settings) return;
