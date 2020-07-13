@@ -343,7 +343,7 @@ function writeSpreadSheet(e: GoogleCalendarEventObject): void {
         metaData['spreadSheetId']
     ).getSheetByName(metaData['sheetName']);
 
-    if (sheet == null) {
+    if (!sheet) {
         console.error("the target sheet doesn't exist.");
         return;
     }
@@ -392,14 +392,14 @@ function writeCalendar(e: OnEditEventObject): void {
     /* } */
 
     const sheet = SpreadsheetApp.getActiveSheet();
-    if (sheet == null) {
+    if (!sheet) {
         console.error("the target sheet doesn't exist.");
         return;
     }
     console.log(`the current sheet: ${e.source.getActiveSheet().getName()}`);
 
     const settings = SettingManager.load();
-    if (settings == undefined) return;
+    if (!settings) return;
 
     if (!settings.isSync) {
         // calendar用のsheetでなければ何もしない
