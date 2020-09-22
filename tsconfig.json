@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
         "target":"ESNext",
-        "lib": ["esnext"],
+        "lib": ["ESNext"],
         "types": [
             "@types/node",
             "@types/google-apps-script"
